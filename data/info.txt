@@ -1,0 +1,1 @@
+Place BAMS and reference genome in this folder.

@@ -1,0 +1,11 @@
+Source code will be in this folder:
+
+Main.py - code for running the two subprograms Stats.py and Analyze.py
+Stats.py - Will output a json-file containing stats for all sites close to any given SNP 
+Analyze.py - Will output an HTML-file with the results from the conbase analyze algorithm 
+Params.py - Has all the parameters associated with Stats.py and Analyze.py, any change here will be visible in the output!
+File_Output.py, Script.js, Style.css - code relating to output 
+
+HOW TO RUN:
+Stats.py:   python3 Main.py stats <snp path> <bam path> <reference path> <number of nodes> <output name>
+Analyze.py: python3 Main.py analyze <json path> <output name>

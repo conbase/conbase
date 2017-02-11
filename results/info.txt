@@ -1,0 +1,1 @@
+Results (HTML-files, jsons and Phylip-files) will be placed in this folder.
