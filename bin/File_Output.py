@@ -1,6 +1,7 @@
-STYLE_PATH = 'Style.css'
-SCRIPT_PATH = 'Script.js'
-import Params as params
+import os, Params as params
+main_directory = os.path.dirname(os.path.realpath(__file__))
+STYLE_PATH = main_directory + '/Style.css'
+SCRIPT_PATH = main_directory + '/Script.js'
 
 class Phylip_format(object):
     def __init__(self, path, sample_names):
