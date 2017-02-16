@@ -85,3 +85,13 @@ class HTML(object):
         f = open(self.path,'w')
         f.write("".join(self.source_code))
         f.close()
+        
+class Site2JSON(object):
+    def __init__(self, path):
+        self.f = open(path,'w')    
+    def write(self,site):
+        if site.TYPE == '':
+            self.f.write(repr(site) + '\n')
+
+    def close(self):
+        self.f.close()
