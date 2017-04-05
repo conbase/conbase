@@ -46,7 +46,7 @@ class HTML(object):
         self.source_code.append('<tr onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')">\n')
 
         self.source_code.append('<td class="info cell">chr' + site.CHROM + ':' + str(site.real_POS()) + '</td>\n')  
-        self.source_code.append('<td class="None cell">' + site.get_bulk_info() + '</td>')  
+        self.source_code.append('<td class="bulk cell">' + site.get_bulk_info() + '</td>')  
 
 
         for sample_name in self.sample_names:
