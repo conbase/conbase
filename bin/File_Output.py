@@ -27,8 +27,8 @@ class Phylip_format(object):
 class HTML(object):
     def __init__(self, path, sample_names):
         self.path = path
-        self.source_code = self.open()
         self.sample_names = sample_names
+        self.source_code = self.open()
 
     def open(self):
         source_code = ['<html>\n<head>\n<style>\n']
@@ -39,20 +39,35 @@ class HTML(object):
         source_code.append('<body><div id="button"> <button type="button" id="btn" onclick="change(\'min\')">Zoom out</button> <img height="30px" src="https://s17.postimg.org/bb0oek5i7/conbase.gif" style="float:right;  margin-right:20px"><br/>')
         params_line = 'dp_ms_limit: ' + str(params.dp_ms_limit) + ', msp_ratio: ' + str(params.msp_ratio) + ', msp_internal_ratio: ' + str(params.msp_internal_ratio) + '</div>' 
         source_code.append(params_line)
-        source_code.append('\n<table id="data">\n')
+        source_code.append('\n<table id="data"><tr><td class="cell"> position</td><td class="cell">BULK</td>\n')
+        for sample_name in self.sample_names:
+            source_code.append('<td class="cell">' + sample_name + '</td>')
+        source_code.append('</tr>')
         return source_code
     
     def write_site(self, site):
         self.source_code.append('<tr onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')">\n')
 
         self.source_code.append('<td class="info cell">chr' + site.CHROM + ':' + str(site.real_POS()) + '</td>\n')  
-        self.source_code.append('<td class="bulk cell">' + site.get_bulk_info() + '</td>')  
+        self.source_code.append('<td class="bulk cell"> DP: ' + str(site.BULK_INFO['SUM']) + '</td>')  
 
 
         for sample_name in self.sample_names:
-            self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" >' + sample_name + '\n')
+            cell_name_type = "name"
+            if site.samples[sample_name].info == "X":
+                cell_name_type = "X"
+            elif site.samples[sample_name].info == "HOMO-R" or site.samples[sample_name].info == "ADO-R":
+                cell_name_type = "0"
+            elif site.samples[sample_name].info == "HET" or site.samples[sample_name].info == "ADO-A1":
+                cell_name_type = "1"
+            elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
+                cell_name_type = ""
+            elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) > 0:
+                cell_name_type = "not informative"
+            self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" >' + cell_name_type + '\n')
             self.source_code.append('<table class="hidden ' + 'hidden_' +  site.CHROM + '_' + str(site.real_POS()) + '">\n')
-            self.source_code.append('<tr><td colspan=5>' + site.samples[sample_name].get_AD(site) + '</td></tr>')
+            self.source_code.append('<tr><td colspan=5><strong>' + sample_name + '</strong>: ' + site.samples[sample_name].get_AD(site) + '</td></tr>')
+
             self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
             for snp_pos, msp in site.samples[sample_name].MSP.items():
                 if msp.get_ms_total() > 0:

@@ -27,7 +27,7 @@ if __name__ == '__main__':
         nodes = int(args.stats[3])
         output_file_name = args.stats[4]
         Stats.stats(snps_path, bam_paths, reference_path, nodes, output_file_name)
-        print("Done!", + '../results/' + output_file_name + ".json" )
+        print("Done!" + '../results/' + output_file_name + ".json" )
 
     if args.analyze is not None:
         json_path = args.analyze[0]
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         for site in sites:
             Analyze.gt_ratio(site)
             for sample in site.samples.values():
-                if site.TYPE == '' and (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1'):
+                if site.TYPE == '' and (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1') and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= 15 and site.BULK_INFO['SUM'] <= 45:
                     print(site.CHROM + ':' + str(site.real_POS()))
                     my_sites.append(site)
                     break
@@ -53,3 +53,5 @@ if __name__ == '__main__':
             html.write_site(site)
         phylip.write_sites(my_sites)
         html.close()
+        print('Done! ' + output_name + '.html')
+

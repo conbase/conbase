@@ -98,10 +98,10 @@ class Read(object):
     def __init__(self, id, mate, sequence, tuples, start, end, base_quality, mapping_quality, has_snp):
         self.id = id
         self.mate = mate
-        self.bases = self.init_bases(tuples, sequence)
-        self.base_quality = self.init_base_quality(tuples, base_quality)
         self.start = start
         self.end = end
+        self.bases = self.init_bases(tuples, sequence)
+        self.base_quality = self.init_base_quality(tuples, base_quality)
         self.mapping_quality = mapping_quality
         self.has_snp = has_snp
 
@@ -114,6 +114,15 @@ class Read(object):
         for i, p in tuples:
             if p != None and i != None:
                 bases[p] = sequence[i]      
+#            if self.start <= 76111775 and self.end >= 76111775 and p==None:
+#                zip_list = list()
+#                for index, pos in tuples:
+#                    if index != None:
+#            	        zip_list.append((pos, sequence[index]))
+#                    else:
+#            	        zip_list.append((pos, None)) 
+#                print('> ',zip_list)
+#                print()
         return bases 
 
     def init_base_quality(self, tuples, base_quality_list):
@@ -184,7 +193,7 @@ def get_reads(snp, bams):
 
         if left < 0:
             left = 0
-
+#        print(bam_name)
         for read in bam_file.fetch(snp.CHROM,  left, right):
             if read.mapping_quality >= params.mapping_quality and read.is_paired and read.is_proper_pair:
                 r = Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),

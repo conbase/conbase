@@ -105,6 +105,8 @@ def gt_ratio(site):
                             vote['X'] += 1
                         else:
                             msp.voted = False
+                    #if msp.voted:
+                    #    print('new snp, sample:',sample.name , vote)
                 else:
                     msp_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.msp_ratio and m[2] >= params.msp_internal_ratio]
                     if len(msp_list) == 1:
