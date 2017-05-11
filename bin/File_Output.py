@@ -58,11 +58,11 @@ class HTML(object):
                 if msp.get_ms_total() > 0:
                     if msp.voted:
                         if site.snp_ms_win[snp_pos] is None:
-                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + snp_pos + '</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
                         else:
-                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + snp_pos + ' (' + str(site.snp_ms_win[snp_pos]) + ')</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + ' (' + str(site.snp_ms_win[snp_pos]) + ')</td></tr>\n')
                     else:
-                        self.source_code.append('<tr><td colspan=5>SNP: ' + str(snp_pos) + '</td></tr>\n')
+                        self.source_code.append('<tr><td colspan=5>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
 
                     self.source_code.append('<tr><td colspan=2>GT distribution</td>\n')
 

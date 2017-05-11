@@ -108,7 +108,7 @@ class Read(object):
     def __str__(self):
         return "ID: {ID}, MATE: {MATE}, SEQ: {SEQ}, START: {START}, END: {END}".format(ID = self.id, MATE = self.mate.id, SEQ = self.bases, START = self.start, END = self.end)
 
-    def init_bases(self,tuples, sequence):
+    def init_bases(self,tuples,sequence):
         bases = dict()
         base_quality = dict()
         for i, p in tuples:
@@ -390,7 +390,7 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
         
         print("SNP pos:", snp.POS)
-        reads = get_reads(snp, bams)
+        reads, indel_pos = get_reads(snp, bams)
         new_start, new_end = snp_limits(snp, reads)
         
         if (new_start == None and new_end == None):            
@@ -413,7 +413,7 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         
         reference = get_references(snp.CHROM, new_start, new_end, reference_genome_file)
         for pos in range(new_start, new_end+1):
-            if pos not in sites.keys() and reference[pos] != None :
+            if pos not in sites.keys() and reference[pos] != None and pos not in indel_pos:
                 sites[pos] = init_site(snp, sample_names, reference, pos) #
                 allele_counter(reads, sites[pos], pos) #
                 define_altenative(sites[pos])
