@@ -18,3 +18,7 @@ msp_internal_ratio = 0.10
 
 sample_ms_vote_limit = 2
 vote_ms_ratio_limit = 0.3
+
+################ Misc ##################
+snp_nr_limit = 10
+snp_dist_limit = 1000
