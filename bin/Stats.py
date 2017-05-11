@@ -422,6 +422,61 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         
         reference = get_references(snp.CHROM, new_start, new_end, reference_genome_file)
         for pos in range(new_start, new_end+1):
+            if pos not in sites.keys() and reference[pos] != None :
+                sites[pos] = init_site(snp, sample_names, reference, pos) #
+                allele_counter(reads, sites[pos], pos) #
+                define_altenative(sites[pos])
+        mut_snp(snp, sites, reads)    #
+        old_end = new_end
+    
+    print("Skipped mates: ", skipped_mate)
+    for s in sites.values():
+        if s.TYPE == '':
+            has_sites = True
+            bulk_stats(s, bam_bulk)
+        json_file.write(s)
+    json_file.close()
+    if has_sites:
+        queue.put(i)
+        
+def stats_to_json_2(i, snps_chunk_path, bams_path, sample_names, reference_path, output_name, queue):
+    bams, bam_bulk = get_bams(bams_path)
+    reference_genome_file = pysam.Fastafile(reference_path)
+
+    sites = dict()
+    old_end = 0
+    json_path = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
+    json_file = Site2JSON(json_path)
+    has_sites = False
+
+    snps_reader = csv.DictReader(open(snps_chunk_path, 'rU'), delimiter='\t')
+    for row in snps_reader:
+        snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
+        
+        print("SNP pos:", snp.POS)
+        reads, indel_pos = get_reads(snp, bams)
+        new_start, new_end = snp_limits(snp, reads)
+        
+        if (new_start == None and new_end == None):            
+            for s in sites.values():
+                if s.TYPE == '':
+                    has_sites = True
+                    bulk_stats(s, bam_bulk)
+                json_file.write(s)
+            sites = dict()
+            old_end = 0
+            continue
+        
+        if new_start - old_end > params.fragment_length:
+            for s in sites.values():
+                if s.TYPE == '':
+                    has_sites = True
+                    bulk_stats(s, bam_bulk)
+                json_file.write(s)
+            sites = dict()
+        
+        reference = get_references(snp.CHROM, new_start, new_end, reference_genome_file)
+        for pos in range(new_start, new_end+1):
             if pos not in sites.keys() and reference[pos] != None and pos not in indel_pos:
                 sites[pos] = init_site(snp, sample_names, reference, pos) #
                 allele_counter(reads, sites[pos], pos) #
