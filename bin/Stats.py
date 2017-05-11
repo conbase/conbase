@@ -399,7 +399,7 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
         
         print("SNP pos:", snp.POS)
-        reads, indel_pos = get_reads(snp, bams)
+        reads = get_reads(snp, bams)
         new_start, new_end = snp_limits(snp, reads)
         
         if (new_start == None and new_end == None):            
