@@ -4,7 +4,7 @@ def remove_snp_duplicate_region(snps_path, snp_nr_limit=10, snp_dist_limit=10000
     snp_reader = csv.DictReader(open(snps_path, 'rU'), delimiter='\t')
     snps_path_new = snps_path + '.new'
     snp_writer = open(snps_path_new, 'w')
-    snp_writer.write('CHROM\tPOS\n')
+    snp_writer.write('CHROM\tPOS\tREF\tALT\n')
 
     first_row = snp_reader.__next__()
     left_pos = int(first_row['POS'])
