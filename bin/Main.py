@@ -48,9 +48,9 @@ if __name__ == '__main__':
         for site in sites:
             Analyze.gt_ratio(site)
             for sample in site.samples.values():
-                if site.TYPE == '' and (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1'):
+                if site.TYPE == '' and (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1') and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= 15 and site.BULK_INFO['SUM'] <= 45:
                     bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
-                    if bulk_a1_ratio <= (1 - params.bulk_ref_limit) and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= 15 and site.BULK_INFO['SUM'] <= 45:
+                    if bulk_a1_ratio <= (1 - params.bulk_ref_limit):
                         print(site.CHROM + ':' + str(site.real_POS()))
                         my_sites.append(site)
                         break
