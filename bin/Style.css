@@ -9,6 +9,17 @@ body{
     width:100%;
 
 }
+.clicker {
+    text-align: center;
+    width: 100%;
+    
+}
+.clicker:hover{
+    background-color:white;
+    opacity: 0.5;
+    color: black;
+}
+
 .hidden {
     display: none ;
 }
