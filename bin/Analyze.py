@@ -9,7 +9,7 @@ def json_to_site(f):
         samples = dict()
         sample_names = []
         for sample in s['samples'].values():
-            snp_pos_list = list(sample['MSP'].keys())
+            snp_pos_list = list(map(int, list(sample['MSP'].keys())))
             sample_names.append(sample['name'])
             MSP_dict = dict()
             for pos in snp_pos_list:
