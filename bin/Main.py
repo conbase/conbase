@@ -25,7 +25,7 @@ if __name__ == '__main__':
         snps_path = args.stats[0]
         # Pre-processing of SNP file where we will remove all SNP sites if there are regions of 
         # snp_nr_limit nr of SNPs within snp_dist_limit bases, can be commented out if not wanted
-        snps_path = Misc.remove_snp_duplicate_region(snps_path, params.snp_nr_limit, params.snp_dist_limit)
+        # snps_path = Misc.remove_snp_duplicate_region(snps_path, params.snp_nr_limit, params.snp_dist_limit)
 
         bam_paths = args.stats[1]
         reference_path = args.stats[2]
