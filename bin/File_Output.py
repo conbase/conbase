@@ -73,7 +73,8 @@ class HTML(object):
             self.source_code.append('<tr><td colspan=5><strong>' + sample_name + '</strong>: ' + site.samples[sample_name].get_AD(site) + '</td></tr>')
 
             self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
-            for snp_pos, msp in site.samples[sample_name].MSP.items():
+            msp_list = sorted(list(site.samples[sample_name].MSP.items()), key=lambda x: x[0])
+            for snp_pos, msp in msp_list:
                 if msp.get_ms_total() > 0:
                     if msp.voted:
                         if site.snp_ms_win[snp_pos] is None:
