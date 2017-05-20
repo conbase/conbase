@@ -51,7 +51,7 @@ class HTML(object):
         self.source_code.append('<td class="info cell">chr' + site.CHROM + ':' + str(site.real_POS()) + '</td>\n') 
         bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
         if bulk_a1_ratio > 0:
-            self.source_code.append('<td class="bulk cell"> DP: ' + str(site.BULK_INFO['SUM') + '(' + str(bulk_a1_ratio) + ')</td>')  
+            self.source_code.append('<td class="bulk cell"> DP: ' + str(site.BULK_INFO['SUM']) + '(' + str(bulk_a1_ratio) + ')</td>')  
         else:
             self.source_code.append('<td class="bulk cell"> DP: ' + str(site.BULK_INFO['SUM') + '</td>')  
 
