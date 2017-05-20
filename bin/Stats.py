@@ -366,23 +366,25 @@ def bulk_stats(site, bulk_bam):
     
     T = sum(list(bases.values()))
     if T > 0:
-        site.BULK_INFO['A'] = float(bases['A'])/T
-        site.BULK_INFO['C'] = float(bases['C'])/T
-        site.BULK_INFO['G'] = float(bases['G'])/T
-        site.BULK_INFO['T'] = float(bases['T'])/T
+        site.BULK_INFO['A'] = bases['A']
+        site.BULK_INFO['C'] = bases['C']
+        site.BULK_INFO['G'] = bases['G']
+        site.BULK_INFO['T'] = bases['T']
+        site.BULK_INFO['SUM'] = T           
         
-        bulk_color = 0
-        for v in site.BULK_INFO.values():
-            if v > 0:
-                bulk_color += 1
-        if bulk_color > 1 and site.TYPE != 'SNP':
+        bulk_bases = 0
+        if site.TYPE != 'SNP' and float(site.BULK_INFO[site.REF])/T < params.bulk_ref_limit:
             site.TYPE = 'E'
-        elif bulk_color == 1 and site.TYPE != 'SNP':
-            max_base = max(list(site.BULK_INFO.items()), key=lambda t: t[1])[0]
-            if max_base != site.REF:
-                site.TYPE = 'E'
+        # for v in site.BULK_INFO.values():
+        #     if v > 0:
+        #         bulk_bases += 1
+        # if bulk_bases > 1 and site.TYPE != 'SNP':
+        #     site.TYPE = 'E'
+        # elif bulk_bases == 1 and site.TYPE != 'SNP':
+        #     max_base = max(list(site.BULK_INFO.items()), key=lambda t: t[1])[0]
+        #     if max_base != site.REF:
+        #         site.TYPE = 'E'
 
-        site.BULK_INFO['SUM'] = T        
 
 def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, output_name, queue):
     bams, bam_bulk = get_bams(bams_path)
