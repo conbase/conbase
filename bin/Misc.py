@@ -3,6 +3,7 @@ import Stats
 import Params as params
 import pysam
 import multiprocessing as mp
+import argparse
 
 acceptable_bases = {'A','C','G','T'}
 
