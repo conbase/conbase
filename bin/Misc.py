@@ -20,7 +20,8 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
                     chrom_sites[pos][r.bases[pos].upper()] += 1
     
     reference = Stats.get_references(str(chrom), min(chrom_sites.keys()), max(chrom_sites.keys()), reference_genome_file)
-    for pos in chrom_sites.keys():
+    pos_list = chrom_sites.keys()
+    for pos in pos_list:
         ref = reference[pos]
         T = sum(chrom_sites[pos].values())
         if ref not in acceptable_bases or float(chrom_sites[pos][ref])/T >= params.bulk_ref_limit:
