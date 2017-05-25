@@ -74,6 +74,7 @@ def chrom_duplicate_region(chrom, bulk_path, reference_path, queue, alt_nr_limit
 
 
 def duplicate_regions(bulk_path, reference_path, output_name="duplicate_regions.txt"):
+    os.system("rm ./.conbase/duplicate_region_*")
     jobs = []
     i = 0
     queue = mp.Queue()
