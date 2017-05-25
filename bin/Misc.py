@@ -21,11 +21,14 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
     
     reference = Stats.get_references(str(chrom), min(chrom_sites.keys()), max(chrom_sites.keys()), reference_genome_file)
     pos_list = list(chrom_sites.keys())
+    i = 0
     for pos in pos_list:
         ref = reference[pos]
         T = sum(chrom_sites[pos].values())
         if ref not in acceptable_bases or float(chrom_sites[pos][ref])/T >= params.bulk_ref_limit:
             chrom_sites.pop(pos)
+            i += 1
+    print("ref", str(i), alt, len(chrom_sites))
     return chrom_sites
 
 def chrom_duplicate_region(chrom, pos_list, alt_nr_limit=10, alt_dist_limit=10000):
@@ -37,9 +40,6 @@ def chrom_duplicate_region(chrom, pos_list, alt_nr_limit=10, alt_dist_limit=1000
     right_pos = None
     alt_list = []
     for i, pos in enumerate(pos_list):
-        # if right_pos != None and pos < right_pos:
-        #     pass
-        # else:
         if right_pos == None or pos == right_pos:
             for near_pos in pos_list[i:]:
                 diff = near_pos - pos
