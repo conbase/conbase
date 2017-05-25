@@ -8,7 +8,7 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
     bam_file = pysam.AlignmentFile(bam_path, 'rb')
     reference_genome_file = pysam.Fastafile(reference_path)
     chrom_sites = dict()
-    for read in bam_file.fetch(str(chrom),  all):
+    for read in bam_file.fetch(str(chrom)):
         if read.mapping_quality >= params.mapping_quality and read.is_paired and read.is_proper_pair:
             r = Stats.Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                 read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
