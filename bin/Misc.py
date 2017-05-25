@@ -13,11 +13,11 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
             r = Stats.Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                 read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
             
-            for pos in read.bases.keys():
-                if read.base_quality[pos] > params.base_quality:
+            for pos in r.bases.keys():
+                if r.base_quality[pos] > params.base_quality:
                     if pos not in chrom_sites.keys():
                         chrom_sites[pos] = {'A':0, 'C':0, 'G':0, 'T':0}
-                    chrom_sites[pos][read.bases[pos].upper()] += 1
+                    chrom_sites[pos][r.bases[pos].upper()] += 1
                     chrom_sites[pos]['REF'] = reference[pos]
     
     reference = Stats.get_references(str(chrom), min(chrom_sites.keys()), max(chrom_sites.keys()), reference_genome_file)
