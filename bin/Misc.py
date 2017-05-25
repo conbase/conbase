@@ -18,7 +18,6 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
                     if pos not in chrom_sites.keys():
                         chrom_sites[pos] = {'A':0, 'C':0, 'G':0, 'T':0}
                     chrom_sites[pos][r.bases[pos].upper()] += 1
-                    chrom_sites[pos]['REF'] = reference[pos]
     
     reference = Stats.get_references(str(chrom), min(chrom_sites.keys()), max(chrom_sites.keys()), reference_genome_file)
     for pos in chrom_sites.keys():
