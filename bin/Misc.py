@@ -20,7 +20,7 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
                     chrom_sites[pos][r.bases[pos].upper()] += 1
     
     reference = Stats.get_references(str(chrom), min(chrom_sites.keys()), max(chrom_sites.keys()), reference_genome_file)
-    pos_list = chrom_sites.keys()
+    pos_list = list(chrom_sites.keys())
     for pos in pos_list:
         ref = reference[pos]
         T = sum(chrom_sites[pos].values())
