@@ -78,7 +78,7 @@ def duplicate_regions(bulk_path, reference_path, output_name="duplicate_regions.
     i = 0
     queue = mp.Queue()
     for chrom in range(1,23):
-        p = mp.Process(target=stats_to_json, args=(str(chrom), bulk_path, reference_path, queue))
+        p = mp.Process(target=chrom_duplicate_region, args=(str(chrom), bulk_path, reference_path, queue))
         i += 1
         jobs.append(p)
         p.start()
@@ -93,16 +93,14 @@ def duplicate_regions(bulk_path, reference_path, output_name="duplicate_regions.
 
     for chrom in range(1,23):
         f = './.conbase/duplicate_region_' + chrom + '.txt'
-        os.system('cat '+f+' >> ../results/' + output_name + '.json')
+        os.system('cat '+f+' >> ../results/' + output_name + '.txt')
     os.system("rm ./.conbase/duplicate_region_*")
 
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run conbase')
+    parser = argparse.ArgumentParser(description='Conbase preprocessing-tool for removing duplicate regions')
     parser.add_argument('--duplicate_regions', nargs=3, metavar=("<bam path>", "<reference path>", "<output name>"))
-    parser.add_argument('--analyze', nargs=2, metavar=("<json path>", "<output name>"))
-    parser.add_argument('--params', nargs=1, metavar=("<params path>"))
     args = parser.parse_args()
 
     if args.duplicate_regions is not None:
