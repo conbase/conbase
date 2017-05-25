@@ -37,22 +37,25 @@ def chrom_duplicate_region(chrom, pos_list, alt_nr_limit=10, alt_dist_limit=1000
     right_pos = None
     alt_list = []
     for i, pos in enumerate(pos_list):
-        for near_pos in pos_list[i:]:
-            diff = near_pos - pos
-            if diff <= alt_dist_limit:
-                alt_list.append(near_pos)
-            else:
-                break
-        if len(alt_list) >= alt_nr_limit:
-            if left_pos == None:
-                left_pos = alt_list[0]
-            right_pos = alt_list[-1]
+        if right_pos != None and pos < right_pos:
+            pass
         else:
-            if right_pos != None:
-                site_writer.write(chrom + ':' + str(left_pos) + '-' + str(right_pos) + '\n')
-            left_pos = None
-            right_pos = None
-        alt_list = []
+            for near_pos in pos_list[i:]:
+                diff = near_pos - pos
+                if diff <= alt_dist_limit:
+                    alt_list.append(near_pos)
+                else:
+                    break
+            if len(alt_list) >= alt_nr_limit:
+                if left_pos == None:
+                    left_pos = alt_list[0]
+                right_pos = alt_list[-1]
+            else:
+                if right_pos != None:
+                    site_writer.write(chrom + ':' + str(left_pos) + '-' + str(right_pos) + '\n')
+                left_pos = None
+                right_pos = None
+            alt_list = []
                 
     
     if len(alt_list) >= alt_nr_limit:
@@ -65,10 +68,10 @@ def chrom_duplicate_region(chrom, pos_list, alt_nr_limit=10, alt_dist_limit=1000
     site_writer.close()
     return chrom_alt_path
 
-bulk_path = "/media/box2/Experiments/Joanna/Snake_analys/j_frisen_1602/Fibs/Tree2/FibBulk/FibBulk.reAligned.bwa.bam"
-reference_path = "/media/box2/reference_assemblies/bundle/2.8/b37/from_pall/human_g1k_v37.fasta"
-chrom = '1'
-chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
-chrom_duplicate_region(chrom,chrom_sites.keys())
+# bulk_path = "/media/box2/Experiments/Joanna/Snake_analys/j_frisen_1602/Fibs/Tree2/FibBulk/FibBulk.reAligned.bwa.bam"
+# reference_path = "/media/box2/reference_assemblies/bundle/2.8/b37/from_pall/human_g1k_v37.fasta"
+# chrom = '1'
+# chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
+# chrom_duplicate_region(chrom,chrom_sites.keys())
 
-# chrom_duplicate_region("1",[100,200,300,400, 900,1000, 1800,1900,2000,2001, 2299, 2500, 2502, 3000], alt_nr_limit=4, alt_dist_limit=500)
+chrom_duplicate_region("1",[0,100,200,300,400,500,600,700,900,1000,1800,1900,2000,2001, 2299, 2500, 2502, 3000], alt_nr_limit=4, alt_dist_limit=500)
