@@ -1,6 +1,7 @@
 import csv
 import Stats
 import Params as params
+import pysam
 acceptable_bases = {'A','C','G','T'}
 
 def chrom_alt_sites(chrom, bam_path, reference_path):
