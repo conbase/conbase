@@ -69,6 +69,6 @@ bulk_path = "/media/box2/Experiments/Joanna/Snake_analys/j_frisen_1602/Fibs/Tree
 reference_path = "/media/box2/reference_assemblies/bundle/2.8/b37/from_pall/human_g1k_v37.fasta"
 chrom = '1'
 chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
-chrom_duplicate_region(chrom,chrom_sites[chrom].keys())
+chrom_duplicate_region(chrom,chrom_sites.keys())
 
 # chrom_duplicate_region("1",[100,200,300,400, 900,1000, 1800,1900,2000,2001, 2299, 2500, 2502, 3000], alt_nr_limit=4, alt_dist_limit=500)
