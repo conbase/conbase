@@ -64,10 +64,14 @@ class HTML(object):
             elif site.samples[sample_name].info == "HET" or site.samples[sample_name].info == "ADO-A1":
                 cell_name_type = "1"
             elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
-                cell_name_type = ""
+                cell_name_type = "-"
             elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) > 0:
                 cell_name_type = "not informative"
-            self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
+            if site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
+                self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker" style="opacity:0.0" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
+            
+            else:
+                self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker " onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
             self.source_code.append('<table class="hidden ' + 'hidden_' +  site.CHROM + '_' + str(site.real_POS()) + '">\n')
             self.source_code.append('<tr><td colspan=5><strong>' + sample_name + '</strong>: ' + site.samples[sample_name].get_AD(site) + '</td></tr>')
 
