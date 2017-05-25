@@ -2,6 +2,8 @@ import csv
 import Stats
 import Params as params
 import pysam
+import multiprocessing as mp
+
 acceptable_bases = {'A','C','G','T'}
 
 def chrom_alt_sites(chrom, bam_path, reference_path):
@@ -31,11 +33,12 @@ def chrom_alt_sites(chrom, bam_path, reference_path):
     print("ref", str(i), alt, len(chrom_sites))
     return chrom_sites
 
-def chrom_duplicate_region(chrom, pos_list, alt_nr_limit=10, alt_dist_limit=10000):
-    chrom_alt_path = chrom + '.txt'
+def chrom_duplicate_region(chrom, bulk_path, reference_path, queue, alt_nr_limit=10, alt_dist_limit=10000):
+    chrom_alt_path = './.conbase/duplicate_region_' + chrom + '.txt'
     site_writer = open(chrom_alt_path, 'w')
 
-    pos_list = sorted(list(pos_list))
+    chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
+    pos_list = sorted(list(chrom_sites.keys()))
     left_pos = None
     right_pos = None
     alt_list = []
@@ -66,15 +69,47 @@ def chrom_duplicate_region(chrom, pos_list, alt_nr_limit=10, alt_dist_limit=1000
         site_writer.write(chrom + ':' + str(left_pos) + '-' + str(right_pos) + '\n')
 
     site_writer.close()
-    return chrom_alt_path
+    queue.put(chrom_alt_path)
 
-bulk_path = "/media/box2/Experiments/Joanna/Snake_analys/j_frisen_1602/Fibs/Tree2/FibBulk/FibBulk.reAligned.bwa.bam"
-reference_path = "/media/box2/reference_assemblies/bundle/2.8/b37/from_pall/human_g1k_v37.fasta"
-chrom = '1'
-chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
-chrom_duplicate_region(chrom,chrom_sites.keys())
 
-# chrom_duplicate_region("1",[0, 2, 4, 7, 14, 15, 16], alt_nr_limit=4, alt_dist_limit=10)
-# # 0-7 --> nej
-# # 4 --> 14 ok
-# # 4 --> 16 nej
+def duplicate_regions(bulk_path, reference_path, output_name="duplicate_regions.txt"):
+    jobs = []
+    i = 0
+    queue = mp.Queue()
+    for chrom in range(1,23):
+        p = mp.Process(target=stats_to_json, args=(str(chrom), bulk_path, reference_path, queue))
+        i += 1
+        jobs.append(p)
+        p.start()
+
+    for job in jobs:
+        job.join()
+
+    chrom_duplicate_regions_list = []
+    while not queue.empty():
+        chrom_duplicate_regions_list.append(queue.get())
+    print('all done')
+
+    for chrom in range(1,23):
+        f = './.conbase/duplicate_region_' + chrom + '.txt'
+        os.system('cat '+f+' >> ../results/' + output_name + '.json')
+    os.system("rm ./.conbase/duplicate_region_*")
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run conbase')
+    parser.add_argument('--duplicate_regions', nargs=3, metavar=("<bam path>", "<reference path>", "<output name>"))
+    parser.add_argument('--analyze', nargs=2, metavar=("<json path>", "<output name>"))
+    parser.add_argument('--params', nargs=1, metavar=("<params path>"))
+    args = parser.parse_args()
+
+    if args.duplicate_regions is not None:
+        duplicate_regions(args.duplicate_regions[0], args.duplicate_regions[1], args.duplicate_regions[2])
+
+
+# bulk_path = "/media/box2/Experiments/Joanna/Snake_analys/j_frisen_1602/Fibs/Tree2/FibBulk/FibBulk.reAligned.bwa.bam"
+# reference_path = "/media/box2/reference_assemblies/bundle/2.8/b37/from_pall/human_g1k_v37.fasta"
+# chrom = '1'
+# chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
+# chrom_duplicate_region(chrom,chrom_sites.keys())
