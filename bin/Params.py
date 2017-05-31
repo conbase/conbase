@@ -9,6 +9,8 @@ alt_ratio_limit = 0.1
 sample_vote_limit = 2   
 vote_ratio_limit = 1.0
 snp_read_limit = 1
+# Indel
+indel_ratio = 0.01
 # Bulk
 bulk_ref_limit = 0.99 #this requires the remaining percent to be only a1 
 ############### Analyze #################

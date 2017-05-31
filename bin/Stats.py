@@ -57,6 +57,7 @@ class Sample(JSONSerializable):
         self.snp_reads  = 0
         self.MSP        = MSP
         self.info       = info
+        self.indels     = 0
 
     # TODO
     def get_AD(self, site):
@@ -108,22 +109,21 @@ class Read(object):
 
     def __str__(self):
         return "ID: {ID}, MATE: {MATE}, SEQ: {SEQ}, START: {START}, END: {END}".format(ID = self.id, MATE = self.mate.id, SEQ = self.bases, START = self.start, END = self.end)
-
+    
+    # D: AA<C>G -> [(0,100), (1,101), (None,102), (2,103)]
+    # I: AA<C>G -> [(0,100), (1,101), (2,None), (3,102)]
     def init_bases(self,tuples,sequence):
         bases = dict()
         base_quality = dict()
         for i, p in tuples:
             if p != None and i != None:
-                bases[p] = sequence[i]      
-#            if self.start <= 76111775 and self.end >= 76111775 and p==None:
-#                zip_list = list()
-#                for index, pos in tuples:
-#                    if index != None:
-#            	        zip_list.append((pos, sequence[index]))
-#                    else:
-#            	        zip_list.append((pos, None)) 
-#                print('> ',zip_list)
-#                print()
+                bases[p] = sequence[i]
+            elif p != None and i == None: # D
+                bases[p] == 'D'
+            # elif p == None and i != None: #I
+            #     bases[p] == 'D'
+
+            # if self.start <= 76111775 and self.end >= 76111775 and p==None:
         return bases 
 
     def init_base_quality(self, tuples, base_quality_list):
@@ -268,8 +268,18 @@ def snp_limits(snp, reads):
 def allele_counter(reads, site, pos):
     for sample_name, sample_reads in reads.items():
         for read in sample_reads:
-            if pos in read.bases.keys() and read.bases[pos] != None and read.base_quality[pos] > params.base_quality:
-                site.samples[sample_name].AD[read.bases[pos].upper()] += 1
+            if pos in read.bases.keys():
+                base = read.bases[pos].upper()
+                if base in acceptable_bases and read.bases[pos] != None and read.base_quality[pos] > params.base_quality:
+                    site.samples[sample_name].AD[base] += 1
+                elif base in {'D', 'I'}:
+                     site.samples[sample_name].indels += 1
+
+def is_indel(site):
+    tot_indel_ratio = 0
+    for sample in site.samples.values():
+        tot_indel_ratio += float(sample.indels)/sum(sample.AD.values())
+    return (tot_indel_ratio/len(site.samples)) > params.indel_ratio
 
 def ratio(num1, num2):
     if (num1 + num2) > 0:
@@ -424,11 +434,13 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         
         reference = get_references(snp.CHROM, new_start, new_end, reference_genome_file)
         for pos in range(new_start, new_end+1):
-            if pos not in sites.keys() and reference[pos] != None :
-                sites[pos] = init_site(snp, sample_names, reference, pos) #
-                allele_counter(reads, sites[pos], pos) #
-                define_altenative(sites[pos])
-        mut_snp(snp, sites, reads)    #
+            if pos not in sites.keys() and reference[pos] != None:
+                site = init_site(snp, sample_names, reference, pos) 
+                allele_counter(reads, site, pos) 
+                if not is_indel(site):
+                    sites[pos] = site
+                    define_altenative(sites[pos])
+        mut_snp(snp, sites, reads)
         old_end = new_end
     
     print("Skipped mates: ", skipped_mate)
@@ -441,61 +453,6 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
     if has_sites:
         queue.put(i)
         
-def stats_to_json_2(i, snps_chunk_path, bams_path, sample_names, reference_path, output_name, queue):
-    bams, bam_bulk = get_bams(bams_path)
-    reference_genome_file = pysam.Fastafile(reference_path)
-
-    sites = dict()
-    old_end = 0
-    json_path = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
-    json_file = Site2JSON(json_path)
-    has_sites = False
-
-    snps_reader = csv.DictReader(open(snps_chunk_path, 'rU'), delimiter='\t')
-    for row in snps_reader:
-        snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
-        
-        print("SNP pos:", snp.POS)
-        reads, indel_pos = get_reads(snp, bams)
-        new_start, new_end = snp_limits(snp, reads)
-        
-        if (new_start == None and new_end == None):            
-            for s in sites.values():
-                if s.TYPE == '':
-                    has_sites = True
-                    bulk_stats(s, bam_bulk)
-                json_file.write(s)
-            sites = dict()
-            old_end = 0
-            continue
-        
-        if new_start - old_end > params.fragment_length:
-            for s in sites.values():
-                if s.TYPE == '':
-                    has_sites = True
-                    bulk_stats(s, bam_bulk)
-                json_file.write(s)
-            sites = dict()
-        
-        reference = get_references(snp.CHROM, new_start, new_end, reference_genome_file)
-        for pos in range(new_start, new_end+1):
-            if pos not in sites.keys() and reference[pos] != None and pos not in indel_pos:
-                sites[pos] = init_site(snp, sample_names, reference, pos) #
-                allele_counter(reads, sites[pos], pos) #
-                define_altenative(sites[pos])
-        mut_snp(snp, sites, reads)    #
-        old_end = new_end
-    
-    print("Skipped mates: ", skipped_mate)
-    for s in sites.values():
-        if s.TYPE == '':
-            has_sites = True
-            bulk_stats(s, bam_bulk)
-        json_file.write(s)
-    json_file.close()
-    if has_sites:
-        queue.put(i)
-
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
