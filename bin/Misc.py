@@ -48,7 +48,7 @@ def SNP_duplicate_region(snp_path, bam_path, reference_path, queue):
     SNP_reader = open(snp_path, 'r')
     SNP_writer = open(snp_path[:-4] + '_not_duplicate_region_.tsv', 'w')
 
-    snps = {}
+    snps = []
     # SNP_writer.write(SNP_reader.readline() + '\n')
     for line in SNP_reader:
         CHROM, POS, REF, ALT = line.rstrip('\n').strip().split('\t')
