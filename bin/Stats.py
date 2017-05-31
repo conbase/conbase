@@ -119,7 +119,7 @@ class Read(object):
             if p != None and i != None:
                 bases[p] = sequence[i]
             elif p != None and i == None: # D
-                bases[p] == 'D'
+                bases[p] = 'D'
             # elif p == None and i != None: #I
             #     bases[p] == 'D'
 
