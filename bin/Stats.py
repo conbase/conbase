@@ -278,7 +278,7 @@ def allele_counter(reads, site, pos):
 def is_indel(site):
     tot_indel_ratio = 0
     for sample in site.samples.values():
-        tot_indel_ratio += float(sample.indels)/sum(sample.AD.values())
+        tot_indel_ratio += float(sample.indels)/sum(sample.AD.values()) if sum(sample.AD.values()) > 0 else 0
     return (tot_indel_ratio/len(site.samples)) > params.indel_ratio
 
 def ratio(num1, num2):
