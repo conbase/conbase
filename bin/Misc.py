@@ -49,7 +49,7 @@ def SNP_duplicate_region(snp_path, bam_path, reference_path, queue):
     SNP_writer = open(snp_path[:-4] + '_not_duplicate_region_.tsv', 'w')
 
     snps = []
-    # SNP_writer.write(SNP_reader.readline() + '\n')
+    SNP_reader.readline()
     for line in SNP_reader:
         CHROM, POS, REF, ALT = line.rstrip('\n').strip().split('\t')
         snps.append({'CHROM':CHROM, 'POS':int(POS), 'REF':REF, 'ALT':ALT})
@@ -88,6 +88,7 @@ def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name=
     print('all done')
 
     f = open( '../results/' + output_name + '.tsv', 'w')
+    f.write('CHROM' + '\t' + 'POS' + '\t' + 'REF' + '\t' + 'ALT' + '\n')
     f.close()
 
     for snps_chunk_path in snps_chunks_path:
