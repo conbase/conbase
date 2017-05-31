@@ -4,6 +4,7 @@ import Params as params
 import pysam
 import multiprocessing as mp
 import argparse
+import os
 
 acceptable_bases = {'A','C','G','T'}
 

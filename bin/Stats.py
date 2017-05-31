@@ -599,7 +599,6 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
     for job in jobs:
         job.join()
 
-
     chunk_list = []
     while not queue.empty():
         chunk_list.append(queue.get())
