@@ -58,7 +58,7 @@ def SNP_duplicate_region(snp_path, bam_path, reference_path, queue):
     reference_genome_file = pysam.Fastafile(reference_path)
     for snp in snps:
         if not snp_in_duplicate_region(snp, bam_file, reference_genome_file):
-            SNP_writer.write(snp['CHROM'] + '\t' + snp['POS'] + '\t' +  snp['REF'] + '\t' + snp['ALT'] + '\n')
+            SNP_writer.write(snp['CHROM'] + '\t' + str(snp['POS']) + '\t' +  snp['REF'] + '\t' + snp['ALT'] + '\n')
     queue.put(snp_path)
 
 def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name="duplicate_regions"):
