@@ -130,7 +130,9 @@ class Read(object):
         base_quality = dict()
         for i, p in tuples:
             if p != None and i != None:
-                base_quality[p] = base_quality_list[i]       
+                base_quality[p] = base_quality_list[i] 
+            elif p != None and i == None:
+                base_quality[p] = 0      
         return base_quality 
 
 class MSP(JSONSerializable):
