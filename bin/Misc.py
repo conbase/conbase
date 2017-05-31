@@ -7,105 +7,102 @@ import argparse
 
 acceptable_bases = {'A','C','G','T'}
 
-def chrom_alt_sites(chrom, bam_path, reference_path):
-    bam_file = pysam.AlignmentFile(bam_path, 'rb')
-    reference_genome_file = pysam.Fastafile(reference_path)
-    chrom_sites = dict()
-    for read in bam_file.fetch(str(chrom)):
+def snp_in_duplicate_region(snp, bam_file, reference_genome_file):
+    sites = dict()
+
+    left = snp['POS']-params.snp_dist_limit if snp['POS']-params.snp_dist_limit > 0 else 0
+    right = snp['POS']+params.snp_dist_limit
+
+    for read in bam_file.fetch(snp['CHROM'], left, right):
         if read.mapping_quality >= params.mapping_quality and read.is_paired and read.is_proper_pair:
             r = Stats.Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                 read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
-            
+
             for pos in r.bases.keys():
-                if r.base_quality[pos] > params.base_quality:
-                    if pos not in chrom_sites.keys():
-                        chrom_sites[pos] = {'A':0, 'C':0, 'G':0, 'T':0}
-                    chrom_sites[pos][r.bases[pos].upper()] += 1
-    
-    reference = Stats.get_references(str(chrom), min(chrom_sites.keys()), max(chrom_sites.keys()), reference_genome_file)
-    pos_list = list(chrom_sites.keys())
-    i = 0
+                if pos >= left and pos <= right and r.base_quality[pos] > params.base_quality:
+                    if pos not in sites.keys():
+                        sites[pos] = {'A':0, 'C':0, 'G':0, 'T':0}
+                    sites[pos][r.bases[pos].upper()] += 1
+
+    reference = Stats.get_references(snp['CHROM'], left, right, reference_genome_file)
+    pos_list = list(sites.keys())
     for pos in pos_list:
         ref = reference[pos]
-        T = sum(chrom_sites[pos].values())
-        if ref not in acceptable_bases or float(chrom_sites[pos][ref])/T >= params.bulk_ref_limit:
-            chrom_sites.pop(pos)
-            i += 1
-    print("ref", str(i), alt, len(chrom_sites))
-    return chrom_sites
-
-def chrom_duplicate_region(chrom, bulk_path, reference_path, queue, alt_nr_limit=10, alt_dist_limit=10000):
-    chrom_alt_path = './.conbase/duplicate_region_' + chrom + '.txt'
-    site_writer = open(chrom_alt_path, 'w')
-
-    chrom_sites = chrom_alt_sites(chrom, bulk_path, reference_path)
-    pos_list = sorted(list(chrom_sites.keys()))
-    left_pos = None
-    right_pos = None
-    alt_list = []
-    for i, pos in enumerate(pos_list):
-        if right_pos == None or pos == right_pos:
-            for near_pos in pos_list[i:]:
-                diff = near_pos - pos
-                if diff <= alt_dist_limit:
-                    alt_list.append(near_pos)
-                else:
-                    break
-            if len(alt_list) >= alt_nr_limit:
-                if left_pos == None:
-                    left_pos = alt_list[0]
-                right_pos = alt_list[-1]
-            else:
-                if right_pos != None:
-                    site_writer.write(chrom + ':' + str(left_pos) + '-' + str(right_pos) + '\n')
-                left_pos = None
-                right_pos = None
-            alt_list = []            
+        T = sum(sites[pos].values())
+        if ref not in acceptable_bases or float(sites[pos][ref])/T >= params.bulk_ref_limit:
+            sites.pop(pos)
     
-    if len(alt_list) >= alt_nr_limit:
-        if left_pos == None:
-            left_pos = alt_list[0]
-        right_pos = alt_list[-1]
-    if right_pos != None:
-        site_writer.write(chrom + ':' + str(left_pos) + '-' + str(right_pos) + '\n')
+    pos_list = sorted(list(sites.keys()))
+    in_duplicate_region = False
+    if len(pos_list) > params.snp_nr_limit:
+        for i in range(len(pos_list)-params.snp_nr_limit + 1):
+            interval = pos_list[i:i+params.snp_nr_limit]
+            if max(interval) - min(interval) <= params.snp_dist_limit:
+                in_duplicate_region = True
+                break
+    return in_duplicate_region
 
-    site_writer.close()
-    queue.put(chrom_alt_path)
+
+def SNP_duplicate_region(snp_path, bam_path, reference_path, queue):
+    SNP_reader = open(snp_path, 'r')
+    SNP_writer = open(snp_path[:-4] + '_not_duplicate_region_.tsv', 'w')
+
+    snps = {}
+    # SNP_writer.write(SNP_reader.readline() + '\n')
+    for line in SNP_reader:
+        CHROM, POS, REF, ALT = line.rstrip('\n').strip().split('\t')
+        snps.append({'CHROM':CHROM, 'POS':int(POS), 'REF':REF, 'ALT':ALT})
+
+    bam_file = pysam.AlignmentFile(bam_path, 'rb')
+    reference_genome_file = pysam.Fastafile(reference_path)
+    for snp in snps:
+        if not snp_in_duplicate_region(snp, bam_file, reference_genome_file):
+            SNP_writer.write(snp['CHROM'] + '\t' + snp['POS'] + '\t' +  snp['REF'] + '\t' + snp['ALT'] + '\n')
+    queue.put(snp_path)
+
+def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name="duplicate_regions"):
 
 
-def duplicate_regions(bulk_path, reference_path, output_name="duplicate_regions.txt"):
+    if not os.path.exists("./.conbase"):
+        os.makedirs("./.conbase")
+    if not os.path.exists("../results"):
+        os.makedirs("../results")
+
     os.system("rm ./.conbase/duplicate_region_*")
+    os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
+
+    snps_chunks_path = Stats.snps_to_chunks(snps_path, nodes, output_name)
+
     jobs = []
-    i = 0
     queue = mp.Queue()
-    for chrom in range(1,23):
-        p = mp.Process(target=chrom_duplicate_region, args=(str(chrom), bulk_path, reference_path, queue))
-        i += 1
+    for snps_chunk_path in snps_chunks_path:
+        p = mp.Process(target=SNP_duplicate_region, args=(snps_chunk_path, bam_path, reference_path, queue))
         jobs.append(p)
         p.start()
 
     for job in jobs:
         job.join()
 
-    chrom_duplicate_regions_list = []
     while not queue.empty():
-        chrom_duplicate_regions_list.append(queue.get())
+        queue.get()
     print('all done')
 
-    for chrom in range(1,23):
-        f = './.conbase/duplicate_region_' + chrom + '.txt'
-        os.system('cat '+f+' >> ../results/' + output_name + '.txt')
-    os.system("rm ./.conbase/duplicate_region_*")
+    f = open( '../results/' + output_name + '.tsv', 'w')
+    f.close()
 
+    for snps_chunk_path in snps_chunks_path:
+        f = snps_chunk_path[:-4] + '_not_duplicate_region_.tsv'
+        os.system('cat '+f+' >> ../results/' + output_name + '.tsv')
+    os.system("rm ./.conbase/duplicate_region_*")
+    os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Conbase preprocessing-tool for removing duplicate regions')
-    parser.add_argument('--duplicate_regions', nargs=3, metavar=("<bam path>", "<reference path>", "<output name>"))
+    parser.add_argument('--duplicate_regions', nargs=5, metavar=("<snp path>", "<bam path>", "<reference path>", "<number of nodes>", "<output name>"))
     args = parser.parse_args()
-
     if args.duplicate_regions is not None:
-        duplicate_regions(args.duplicate_regions[0], args.duplicate_regions[1], args.duplicate_regions[2])
+        duplicate_regions(*args.duplicate_regions)
 
 
 # bulk_path = "/media/box2/Experiments/Joanna/Snake_analys/j_frisen_1602/Fibs/Tree2/FibBulk/FibBulk.reAligned.bwa.bam"
