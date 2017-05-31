@@ -63,7 +63,6 @@ def SNP_duplicate_region(snp_path, bam_path, reference_path, queue):
 
 def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name="duplicate_regions"):
 
-
     if not os.path.exists("./.conbase"):
         os.makedirs("./.conbase")
     if not os.path.exists("../results"):

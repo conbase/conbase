@@ -78,7 +78,8 @@ class Sample(JSONSerializable):
         
         alts_value = [v for k, v in site.ALTS.items() if v != None and self.AD[v] > 0]
         other = sum([v for k, v in self.AD.items() if k != site.REF and k not in alts_value and v > 0])
-        
+
+
         str_AD += ", O: {other}".format(other = other)
         return str_AD
 
