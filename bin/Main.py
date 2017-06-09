@@ -47,7 +47,7 @@ if __name__ == '__main__':
         my_sites = []
         for site in sites:
             Analyze.gt_ratio(site)
-            if site.TYPE == '' and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= params.bulk_dp_intervall[0] and site.BULK_INFO['SUM'] <= params.bulk_dp_intervall[1]:
+            if site.TYPE == '' and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= params.bulk_dp_interval[0] and site.BULK_INFO['SUM'] <= params.bulk_dp_interval[1]:
                 bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
                 if bulk_a1_ratio <= (1 - params.bulk_ref_limit):
                     nr_conflicting = 0
