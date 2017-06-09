@@ -121,7 +121,7 @@ class Read(object):
             elif p != None and i == None: # D
                 bases[p] = 'D'
             # elif p == None and i != None: #I
-            #     bases[p] == 'D'
+            #     bases[p] == 'I'
 
             # if self.start <= 76111775 and self.end >= 76111775 and p==None:
         return bases 
