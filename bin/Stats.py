@@ -74,8 +74,8 @@ class Sample(JSONSerializable):
             str_AD = 'R:{R}/.'.format(R = self.AD[site.REF])
         elif self.AD[site.REF] == 0 and len(alts) == 0:
             str_AD = "./."
-        else:
-            print("FEEEEEEEEEEELLLLLLLLLLLL")
+        # else:
+        #     print("FEEEEEEEEEEELLLLLLLLLLLL")
         
         alts_value = [v for k, v in site.ALTS.items() if v != None and self.AD[v] > 0]
         other = sum([v for k, v in self.AD.items() if k != site.REF and k not in alts_value and v > 0])
@@ -209,7 +209,6 @@ def get_reads(snp, bams):
                     if m.mate != None:
                         global skipped_mate
                         skipped_mate += 1
-                        # print("Skipped mates: ", skipped_mate)
                         continue
                     r.mate = m
                     m.mate = r
@@ -329,8 +328,6 @@ def define_altenative(site):
         if len(alts) == 0:
             site.TYPE = 'HOMO'
 
-
-
 def mut_snp(snp, sites, reads):
     for sample_name, sample_reads in reads.items():
         for read in sample_reads:
@@ -406,20 +403,17 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
     old_end = 0
     json_path = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
     json_file = Site2JSON(json_path)
-    has_sites = False
 
     snps_reader = csv.DictReader(open(snps_chunk_path, 'rU'), delimiter='\t')
     for row in snps_reader:
         snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
         
-        print("SNP pos:", snp.POS)
         reads = get_reads(snp, bams)
         new_start, new_end = snp_limits(snp, reads)
         
         if (new_start == None and new_end == None):            
             for s in sites.values():
                 if s.TYPE == '':
-                    has_sites = True
                     bulk_stats(s, bam_bulk)
                 json_file.write(s)
             sites = dict()
@@ -429,7 +423,6 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         if new_start - old_end > params.fragment_length:
             for s in sites.values():
                 if s.TYPE == '':
-                    has_sites = True
                     bulk_stats(s, bam_bulk)
                 json_file.write(s)
             sites = dict()
@@ -444,16 +437,14 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
                     define_altenative(sites[pos])
         mut_snp(snp, sites, reads)
         old_end = new_end
-    
-    print("Skipped mates: ", skipped_mate)
+        
+        queue.put(1)
+        
     for s in sites.values():
         if s.TYPE == '':
-            has_sites = True
             bulk_stats(s, bam_bulk)
         json_file.write(s)
     json_file.close()
-    if has_sites:
-        queue.put(i)
         
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -523,7 +514,7 @@ def snps_to_chunks(snps_path, nodes, output_name):
         i += 1
 
     current_chunk_file.close()
-    return chunks_path
+    return chunks_path, snp_count
 
 def get_sample_names(bam_paths):
     print('Loading BAMS ...')
@@ -533,6 +524,23 @@ def get_sample_names(bam_paths):
         if row['NAME'] != 'BULK':
             sample_names.append(row['NAME'])
     return sample_names  
+
+def progress_bar(nr_snps, queue, bar_width=100):
+    sys.stdout.write("[{}]".format(" " * bar_width))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (bar_width+1))
+    counter = 0
+    prev_progress = 0
+    while True :
+        if queue.get() == 'Done':
+            break
+        else:
+            counter += 1
+            current_progress = int(counter/nr_snps*bar_width)
+            if current_progress != prev_progress:
+                sys.stdout.write("#" * (current_progress - prev_progress))
+                sys.stdout.flush()
+                prev_progress = current_progress
 
 def stats(snps_path, bam_paths, reference_path, nodes, output_name): 
     if not os.path.exists("./.conbase"):
@@ -544,35 +552,32 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
     # os.system("rm ./.conbase/chunk_*")	
     # os.system("rm ./.conbase/snp_chunk_*")
     sample_names = get_sample_names(bam_paths)
-    snps_chunks_path = snps_to_chunks(snps_path, nodes, output_name)
-
+    snps_chunks_path, nr_snps = snps_to_chunks(snps_path, nodes, output_name)
+    nr_chunks = len(snps_chunks_path)
 
     jobs = []
-    i = 0
     queue = mp.Queue()
-    for snps_chunk_path in snps_chunks_path:
+    for i, snps_chunk_path in enumerate(snps_chunks_path):
         p = mp.Process(target=stats_to_json, args=(i, snps_chunk_path, bam_paths, sample_names, reference_path, output_name, queue))
-        i += 1
         jobs.append(p)
         p.start()
+    
+    p = mp.Process(target=progress_bar, args=(nr_snps, queue))
+    jobs.append(p)
+    p.start()
 
-    for job in jobs:
+    for i, job in enumerate(jobs):
+        if i == len(jobs) - 1:
+            queue.put('Done')
         job.join()
-
-    chunk_list = []
-    while not queue.empty():
-        chunk_list.append(queue.get())
-    print('all done')
-    
-    chunk_list.sort()
-    
-    print(chunk_list)
+        
+    print('All done')
 
     f = open( '../results/' + output_name + '.json', 'w')
     f.write('{' + '"samples":' + json.dumps(sample_names) + '}\n')
     f.close()
 
-    for i in chunk_list:
+    for i in range(nr_chunks):
         f = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
         os.system('cat '+f+' >> ../results/' + output_name + '.json')
     os.system("rm ./.conbase/" + output_name + "_chunk_*")	
