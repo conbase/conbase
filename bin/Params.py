@@ -22,6 +22,9 @@ msp_internal_ratio = 0.1
 sample_ms_vote_limit = 2
 vote_ms_ratio_limit = 0.1
 
+conflicting_upper_limit = 1
+a1_lower_limit = 1
+bulk_dp_interval = (15,45) # Must have the following format (min, max)
 ################ Misc ##################
 snp_nr_limit = 10
 snp_dist_limit = 1000
