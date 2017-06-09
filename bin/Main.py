@@ -42,23 +42,30 @@ if __name__ == '__main__':
         samples_names = json.loads(f.readline().strip('\n'))['samples']
 
         html = File_Output.HTML(output_name + ".html", samples_names)
-        phylip = File_Output.Phylip_format(output_name + ".txt", samples_names)
+        # phylip = File_Output.Phylip_format(output_name + ".txt", samples_names)
         sites = Analyze.json_to_site(f)
         my_sites = []
         for site in sites:
             Analyze.gt_ratio(site)
-            for sample in site.samples.values():
-                if site.TYPE == '' and (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1') and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= 15 and site.BULK_INFO['SUM'] <= 45:
-                    bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
-                    if bulk_a1_ratio <= (1 - params.bulk_ref_limit):
+            if site.TYPE == '' and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= params.bulk_dp_intervall[0] and site.BULK_INFO['SUM'] <= params.bulk_dp_intervall[1]:
+                bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
+                if bulk_a1_ratio <= (1 - params.bulk_ref_limit):
+                    nr_conflicting = 0
+                    nr_a1 = 0
+                    for sample in site.samples.values():
+                        if sample.info == 'X':
+                            nr_conflicting += 1
+                        elif (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1'):
+                            nr_a1 += 1
+
+                    if nr_a1 >= params.a1_lower_limit and nr_conflicting <= params.conflicting_upper_limit:
                         print(site.CHROM + ':' + str(site.real_POS()))
                         my_sites.append(site)
-                        break
-        
+            
         my_sites.sort(key= lambda o: (int(o.CHROM), int(o.POS)))
         for site in my_sites:
             html.write_site(site)
-        phylip.write_sites(my_sites)
+        # phylip.write_sites(my_sites)
         html.close()
         print('Done! ' + output_name + '.html')
 
