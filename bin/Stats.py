@@ -533,6 +533,7 @@ def progress_bar(nr_snps, queue, bar_width=100):
     prev_progress = 0
     while True :
         if queue.get() == 'Done':
+            sys.stdout.write("\n")
             break
         else:
             counter += 1
