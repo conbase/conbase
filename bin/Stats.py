@@ -452,12 +452,11 @@ def chunks(l, n):
         yield l[i:i + n]
 
 def get_bams(bam_paths):
-    print('Loading BAMS ...')
     bam_reader = csv.DictReader(open(bam_paths, 'rU'), delimiter='\t')
     bams = []
     bam_bulk = None
     for row in bam_reader:
-        print(row['NAME'])
+        # print(row['NAME'])
         if row['NAME'] == 'BULK':
             bam_bulk = pysam.AlignmentFile(row['PATH'], 'rb')
         else:
@@ -523,6 +522,7 @@ def get_sample_names(bam_paths):
     for row in bam_reader:
         if row['NAME'] != 'BULK':
             sample_names.append(row['NAME'])
+    print(sample_names)
     return sample_names  
 
 def progress_bar(nr_snps, queue, bar_width=100):
