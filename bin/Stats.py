@@ -520,9 +520,9 @@ def get_sample_names(bam_paths):
     bam_reader = csv.DictReader(open(bam_paths, 'rU'), delimiter='\t')
     sample_names = []
     for row in bam_reader:
+        print(row['NAME'])
         if row['NAME'] != 'BULK':
             sample_names.append(row['NAME'])
-    print(sample_names)
     return sample_names  
 
 def progress_bar(nr_snps, queue, bar_width=100):
