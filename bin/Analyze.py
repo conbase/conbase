@@ -58,6 +58,7 @@ def define_ms_pair(snp_pos, site):
 def gt_ratio(site):
     for sample in site.samples.values():
         vote = {'HET':0, 'HOMO-R':0, 'HOMO-A1':0, 'ADO-R':0, 'ADO-A1':0, 'X':0}
+        #TODO: andel av snp som måste rösta
         for snp_pos in sample.MSP.keys():    
             msp = sample.MSP[snp_pos]
             
