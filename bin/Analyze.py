@@ -116,9 +116,9 @@ def gt_ratio(site):
                 sample.info = 'X'
 
             max_vote = sorted(vote.items(), reverse = True, key = lambda t: t[1])
-            max_list = [max_vote[0][0], max_vote[1][0]]
             vote_limit = max_vote[0][1]/total_votes
-            if vote_limit > params.snp_total_vote:
+            if vote_limit >= params.snp_total_vote:
                 sample.info = max_vote[0][0]  
             else:
+                #TODO Homo-R = ADO-R
                 sample.info = 'X'
