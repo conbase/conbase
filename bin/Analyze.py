@@ -42,21 +42,14 @@ def define_ms_pair(snp_pos, site):
             min_, min_name = min(([AR, RA], 'AR'), ([RR, AA], 'AA'), key=lambda x: x[0][0]+x[0][1])
             max_, max_name = max(([AR, RA], 'AR'), ([RR, AA], 'AA'), key=lambda x: x[0][0]+x[0][1])
             
-            #TODO: make 0.01 and 0.1 parameters
-            if(sum(min_)/sum(max_) < 0.01 and ratio(max_[0], max_[1]) > 0.1):
+            if(ratio(sum(min_),sum(max_)) < params.ms_group_ratio and ratio(max_[0], max_[1]) > params.win_internal_group_ratio ):
                 #het gets to vote
                 pairs[max_name] += 1
-                # print('HET vote: RR: {RR}, RA: {RA}, AR: {AR}, AA: {AA}'.format(RR = RR, RA = RA, AR = AR, AA = AA))
-            elif(sum(min_)/sum(max_) < 0.01 and max((RR, 'RR'), (RA, 'RA'), (AR, 'AR'), (AA, 'AR'))[1] in {'AR', 'AA'}):
+            elif(ratio(sum(min_),sum(max_)) < params.ms_group_ratio and max((RR, 'RR'), (RA, 'RA'), (AR, 'AR'), (AA, 'AR'))[1] in {'AR', 'AA'}):
                 #ado-a1 gets to vote
                 pairs[max_name] += 1
-                # print('A1 vote: RR: {RR}, RA: {RA}, AR: {AR}, AA: {AA}'.format(RR = RR, RA = RA, AR = AR, AA = AA))
-            
-            # else: 
-                # print('NO VOTE: RR: {RR}, RA: {RA}, AR: {AR}, AA: {AA}'.format(RR = RR, RA = RA, AR = AR, AA = AA))
 
     max_pair = sorted(list(pairs.items()), reverse=True, key=lambda x: x[1])
-    # print('max', max_pair)
     if max_pair[0][1] > params.sample_ms_vote_limit and ratio(max_pair[0][1], max_pair[1][1]) < params.vote_ms_ratio_limit:
         return max_pair[0][0]
     else:
