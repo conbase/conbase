@@ -35,7 +35,7 @@ def ratio(num1, num2):
 def define_ms_pair(snp_pos, site):
     pairs = {'AR' : 0, 'AA' : 0}
     for sample in site.samples.values():
-        if snp_pos in sample.MSP.keys() and sample.MSP[snp_pos].get_ms_total() > params.dp_ms_limit:
+        if snp_pos in sample.MSP.keys() and sample.MSP[snp_pos].get_ms_total() >= params.dp_ms_limit:
             msp = sample.MSP[snp_pos]
             RR, RA, AR, AA = msp.RR, msp.RA, msp.AR, msp.AA
             
