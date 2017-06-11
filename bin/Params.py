@@ -10,7 +10,7 @@ sample_vote_limit = 2
 vote_ratio_limit = 0.7
 snp_read_limit = 1
 # Indel
-indel_ratio = 0.01
+indel_ratio = 0.05
 # Bulk
 bulk_ref_limit = 0.91 #this requires the remaining percent to be only a1 
 ############### Analyze #################
@@ -22,7 +22,7 @@ msp_internal_ratio = 0.10
 sample_ms_vote_limit = 2
 vote_ms_ratio_limit = 0.3
 
-conflicting_upper_limit = 1
+conflicting_upper_limit = 0
 a1_lower_limit = 1
 bulk_dp_interval = (15,45) # Must have the following format (min, max)
 ################ Misc ##################
