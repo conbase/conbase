@@ -23,7 +23,7 @@ ms_group_ratio = 0.01
 win_internal_group_ratio = 0.1
 
 sample_ms_vote_limit = 2
-vote_ms_ratio_limit = 0.3
+vote_ms_ratio_limit = 0.7
 
 conflicting_upper_limit = 1
 a1_lower_limit = 1

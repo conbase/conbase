@@ -50,7 +50,7 @@ def define_ms_pair(snp_pos, site):
                 pairs[max_name] += 1
 
     max_pair = sorted(list(pairs.items()), reverse=True, key=lambda x: x[1])
-    if max_pair[0][1] > params.sample_ms_vote_limit and ratio(max_pair[0][1], max_pair[1][1]) < params.vote_ms_ratio_limit:
+    if max_pair[0][1] >= params.sample_ms_vote_limit and ratio(max_pair[0][1], max_pair[1][1]) <= (1-params.vote_ms_ratio_limit):
         return max_pair[0][0]
     else:
         return None
