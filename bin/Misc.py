@@ -71,7 +71,7 @@ def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name=
     os.system("rm ./.conbase/duplicate_region_*")
     os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
 
-    snps_chunks_path = Stats.snps_to_chunks(snps_path, int(nodes), output_name)
+    snps_chunks_path, _ = Stats.snps_to_chunks(snps_path, int(nodes), output_name)
 
     jobs = []
     queue = mp.Queue()
