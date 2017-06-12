@@ -68,8 +68,8 @@ def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name=
     if not os.path.exists("../results"):
         os.makedirs("../results")
 
-    os.system("rm ./.conbase/duplicate_region_*")
-    os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
+    # os.system("rm ./.conbase/duplicate_region_*")
+    # os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
 
     snps_chunks_path, _ = Stats.snps_to_chunks(snps_path, int(nodes), output_name)
 
