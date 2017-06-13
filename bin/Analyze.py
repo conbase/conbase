@@ -122,3 +122,89 @@ def gt_ratio(site):
             else:
                 #TODO Homo-R = ADO-R
                 sample.info = 'X'
+
+
+
+def gt_ratio_2(site):
+    for sample in site.samples.values():
+        vote = {'HET':0, 'HOMO-R':0, 'HOMO-A1':0, 'ADO-R':0, 'ADO-A1':0, 'X':0}
+        nr_snp_allowed_voting = 0
+        for snp_pos in sample.MSP.keys():    
+            msp = sample.MSP[snp_pos]
+            
+            ms_pair = define_ms_pair(snp_pos, site)
+            het, homo_R, homo_A1 = msp.get_msp_ratio(ms_pair)
+            
+            if msp.get_ms_total() >= params.dp_ms_limit:
+                
+                # if site.POS == 178756156 and sample.name == 'fibroblast_41' and snp_pos == 178756123:
+                #     import pdb; pdb.set_trace()
+
+                msp.voted = True #TODO
+                site.snp_ms_win[snp_pos] = ms_pair                    
+                if ms_pair != None:
+                    nr_snp_allowed_voting += 1
+                    ##CASE: ADO-R or ADO-A1
+                    if het[2] < params.msp_internal_ratio and homo_R[2] < params.msp_internal_ratio:
+                        if homo_R[1] >= params.msp_ratio and het[1] < params.msp_c2_external_error_ratio:
+                            hr = max((msp.RR, 'RR'), (msp.RA, 'RA'))
+                            if (hr[1] == 'RR' and ms_pair == 'AR') or (hr[1] =='RA' and ms_pair == 'AA'):
+                                vote['ADO-R'] += 1 #we know for certain this is not a mutation
+                                
+                        elif homo_R[1] < params.msp_c2_external_error_ratio and het[1] >= params.msp_ratio:
+                            ha = max((msp.AA, 'AA'), (msp.AR, 'AR'))
+                            if (ha[1] == 'AA' and ms_pair == 'AR') or (ha[1] =='AR' and ms_pair == 'AA'):
+                                vote['X'] += 1 #this is contradictory
+                            else:
+                                vote['ADO-A1'] += 1
+                        else:
+                            msp.voted = False
+                    ##CASE: HET or HOMO-R or HOMO-A1 if it's only one true msp
+                    else:
+                        
+                        msp_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.msp_ratio and m[2] >= params.msp_internal_ratio]
+                        if len(msp_list) == 1:
+                            if msp_list[0][0] == "HET":
+                                if msp_list[0][3] == ms_pair:
+                                    vote[msp_list[0][0]] += 1   #mut-snp pair match!
+                                else:                   
+                                    vote['X'] += 1              #match is not right
+                            else:
+                                vote[msp_list[0][0]] += 1       #homo-R or homo-A1
+                        elif len(msp_list) > 1:
+                            vote['X'] += 1
+                        else:
+                            msp.voted = False
+
+        for k,v in list(vote.items()):
+            if k == 'ADO-A1' and vote['HET'] > 0:
+                vote['HET'] += v
+                vote[k] = 0
+            elif k == 'ADO-R' and vote['HOMO-R'] > 0:
+                vote['HOMO-R'] += v
+                vote[k] = 0
+        
+
+        total_votes = sum(list(vote.values()))
+        if total_votes >= 1:
+            if float(total_votes)/nr_snp_allowed_voting >= params.snp_vote_ratio:
+                if vote['ADO-R'] != 0 and vote['ADO-A1'] != 0:
+                    sample.info = 'X'
+                else:
+                    max_vote = sorted(vote.items(), reverse = True, key = lambda t: t[1])
+                    vote_limit = max_vote[0][1]/total_votes
+                    if vote_limit >= params.snp_total_vote:
+                        if max_vote[0][0] == 'HOMO-R' or max_vote[0][0] == 'ADO-R':
+                            alts_dp = sum([v for k, v in sample.AD.items() if k != site.REF])
+
+                            if float(alts_dp)/sum(sample.AD.values()) <= params.homo_error_allowed:
+                                sample.info = max_vote[0][0]
+                            else:
+                                sample.info = 'X'
+                        else:
+                            sample.info = max_vote[0][0]  
+                    else:
+                        #TODO Homo-R = ADO-R
+                        sample.info = 'X'
+            else:
+                sample.info = 'X'

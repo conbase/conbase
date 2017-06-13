@@ -14,10 +14,15 @@ indel_ratio = 0.05
 # Bulk
 bulk_ref_limit = 0.91 #this requires the remaining percent to be only a1 
 ############### Analyze #################
-dp_ms_limit = 9
-msp_ratio = 0.1
+dp_ms_limit = 10
 snp_total_vote = 0.9
+snp_vote_ratio = 0.8
+
+msp_ratio = 0.85
 msp_internal_ratio = 0.10
+msp_c2_external_error_ratio = 1-msp_ratio
+
+homo_error_allowed = 0.09
 
 ms_group_ratio = 0.01
 win_internal_group_ratio = 0.1
@@ -25,7 +30,7 @@ win_internal_group_ratio = 0.1
 sample_ms_vote_limit = 2
 vote_ms_ratio_limit = 0.7
 
-conflicting_upper_limit = 0
+conflicting_upper_limit = 10
 a1_lower_limit = 1
 bulk_dp_interval = (15,45) # Must have the following format (min, max)
 ################ Misc ##################
