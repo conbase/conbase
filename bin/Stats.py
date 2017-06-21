@@ -141,8 +141,8 @@ class MSP(JSONSerializable):
         self.RA = 0
         self.AR = 0
         self.AA = 0
-        self.stats = ""
-        self.voted = False
+        self.stats = ''
+        self.voted = ''
         self.het = None
         self.homo_R = None
         self.homo_A1 = None

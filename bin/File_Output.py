@@ -51,7 +51,7 @@ class HTML(object):
         self.source_code.append('<td class="info cell">chr' + site.CHROM + ':' + str(site.real_POS()) + '</td>\n') 
         bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
         if bulk_a1_ratio > 0:
-            self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" > DP: ' + str(site.BULK_INFO['SUM']) + '(' + str(bulk_a1_ratio) + ')</p></td>')  
+            self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" > DP: ' + str(site.BULK_INFO['SUM']) + ' (' + '{0:.2f}'.format(bulk_a1_ratio) + ')</p></td>')  
         else:
             self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" > DP: ' + str(site.BULK_INFO['SUM']) + '</p></td>')  
 
@@ -67,6 +67,8 @@ class HTML(object):
                 cell_name_type = "-"
             elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) > 0:
                 cell_name_type = "not informative"
+            elif site.samples[sample_name].info == "unknown":
+                cell_name_type = "?"
             if site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
                 self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker" style="opacity:0.0" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
             
@@ -79,11 +81,11 @@ class HTML(object):
             msp_list = sorted(list(site.samples[sample_name].MSP.items()), key=lambda x: x[0])
             for snp_pos, msp in msp_list:
                 if msp.get_ms_total() > 0:
-                    if msp.voted:
-                        if site.snp_ms_win[snp_pos] is None:
-                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
+                    if msp.voted != '':
+                        if msp.voted == 'unknown':
+                            self.source_code.append('<tr><td class="voted_unknown" colspan=5>SNP: ' + str(snp_pos+1) + ' (ms: ' + str(site.snp_ms_win[snp_pos]) + ', voted: ' + msp.voted + ')</td></tr>\n')
                         else:
-                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + ' (' + str(site.snp_ms_win[snp_pos]) + ')</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + ' (ms: ' + str(site.snp_ms_win[snp_pos]) + ', voted: ' + msp.voted + ')</td></tr>\n')
                     else:
                         self.source_code.append('<tr><td colspan=5>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
 

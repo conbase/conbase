@@ -31,6 +31,10 @@ body{
 .voted{
     background-color:green;
 }
+
+.voted_unknown{
+    background-color:gray;
+}
 tr:hover{
     filter: brightness(115%);
 }
@@ -102,6 +106,16 @@ p {
 .None  {
     background-color:#E6E1E3;
 }
+.unknown {
+    background-color:#424242;
+    color:white;   
+}
+
+.unknown table{
+    background-color:#424242;
+    color:white;
+}
+
 .bulk{
     background-color: #b5f0b4;
 }
