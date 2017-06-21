@@ -3,6 +3,7 @@ import Params as params
 import argparse, json
 import Misc
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run conbase')
     parser.add_argument('--stats', nargs=5, metavar=("<snp path>", "<bam path>", "<reference path>", "<number of nodes>", "<output name>"))

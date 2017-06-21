@@ -43,7 +43,6 @@ def snp_in_duplicate_region(snp, bam_file, reference_genome_file):
                 break
     return in_duplicate_region
 
-
 def SNP_duplicate_region(snp_path, bam_path, reference_path, queue):
     SNP_reader = open(snp_path, 'r')
     SNP_writer = open(snp_path[:-4] + '_not_duplicate_region_.tsv', 'w')
