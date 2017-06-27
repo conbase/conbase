@@ -56,77 +56,6 @@ def define_ms_pair(snp_pos, site):
     else:
         return None
 
-def gt_ratio_old(site):
-    for sample in site.samples.values():
-        vote = {'HET':0, 'HOMO-R':0, 'HOMO-A1':0, 'ADO-R':0, 'ADO-A1':0, 'X':0}
-        #TODO: andel av snp som måste rösta
-        for snp_pos in sample.MSP.keys():    
-            msp = sample.MSP[snp_pos]
-            
-            ms_pair = define_ms_pair(snp_pos, site)
-            het, homo_R, homo_A1 = msp.get_msp_ratio(ms_pair)
-            
-            if msp.get_ms_total() >= params.dp_ms_limit:
-                msp.voted = True #TODO
-                site.snp_ms_win[snp_pos] = ms_pair                    
-                if ms_pair != None:
-                    ##CASE: ADO-R or ADO-A1        
-                    if homo_R[2] <= 0.01 and het[2] <= 0.01 and homo_A1[2] <= 0.01:
-                        if homo_R[1] >= 0.99 and homo_A1[1] <= 0.01:
-                            hr = max((msp.RR, 'RR'), (msp.RA, 'RA'))
-                            if (hr[1] == 'RR' and ms_pair == 'AR') or (hr[1] =='RA' and ms_pair == 'AA'):
-                                vote['ADO-R'] += 1 #we know for certain this is not a mutation
-        
-                        elif homo_A1[1] >= 0.99 and homo_R[1] <= 0.01:
-                            ha = max((msp.AA, 'AA'), (msp.AR, 'AR'))
-                            if (ha[1] == 'AA' and ms_pair == 'AR') or (ha[1] =='AR' and ms_pair == 'AA'):
-                                vote['X'] += 1 #this is contradictory
-                            else:
-                                vote['ADO-A1'] += 1
-                        else:
-                            msp.voted = False
-                    ##CASE: HET or HOMO-R or HOMO-A1 if it's only one true msp
-                    else:   
-                        msp_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.msp_ratio and m[2] >= params.msp_internal_ratio]
-                        if len(msp_list) == 1:
-                            if msp_list[0][0] == "HET":
-                                if msp_list[0][3] == ms_pair:
-                                    vote[msp_list[0][0]] += 1   #mut-snp pair match!
-                                else:                   
-                                    vote['X'] += 1              #match is not right
-                            else:
-                                vote[msp_list[0][0]] += 1       #homo-R or homo-A1
-                        elif len(msp_list) > 1:
-                            vote['X'] += 1
-                        else:
-                            msp.voted = False
-                    #if msp.voted:
-                    #    print('new snp, sample:',sample.name , vote)
-                else:
-                    msp_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.msp_ratio and m[2] >= params.msp_internal_ratio]
-                    if len(msp_list) == 1:
-                        if msp_list[0][0] != "HET" and msp_list[0][0] != "HOMO-A1":
-                            vote[msp_list[0][0]] += 1       #homo-R or homo-A1
-                    elif len(msp_list) > 1:
-                        vote['X'] += 1
-                    else:
-                        msp.voted = False                 
-        
-        total_votes = sum(list(vote.values()))
-        if total_votes >= 1:
-            if vote['ADO-R'] != 0 and vote['ADO-A1'] != 0:
-                sample.info = 'X'
-
-            max_vote = sorted(vote.items(), reverse = True, key = lambda t: t[1])
-            vote_limit = max_vote[0][1]/total_votes
-            if vote_limit >= params.snp_total_vote:
-                sample.info = max_vote[0][0]  
-            else:
-                #TODO Homo-R = ADO-R
-                sample.info = 'X'
-
-
-
 def gt_ratio(site):
     for sample in site.samples.values():
         votes = {'HET':0, 'HOMO-R':0, 'HOMO-A1':0, 'ADO-R':0, 'ADO-A1':0, 'X':0}
@@ -175,7 +104,7 @@ def gt_ratio(site):
                         elif len(msp_list) > 1:
                             msp.voted = 'X'
                         else:
-                            error_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.params.msp_c2_external_error_ratio and m[2] >= params.msp_internal_ratio]
+                            error_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.msp_c2_external_error_ratio and m[2] >= params.msp_internal_ratio]
                             if len(error_list) > 1:
                                 msp.voted = 'X'
                             else:
