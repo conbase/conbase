@@ -174,8 +174,12 @@ def gt_ratio(site):
                         elif len(msp_list) > 1:
                             msp.voted = 'X'
                         else:
-                            msp.voted = 'unknown'
-
+                            error_list = [m for m in [het, homo_R, homo_A1] if m[1] >= params.params.msp_c2_external_error_ratio and m[2] >= params.msp_internal_ratio]
+                            if len(error_list) > 1:
+                                msp.voted = 'X'
+                            else:
+                                msp.voted = 'unknown'
+                                
                     if msp.voted != '' and msp.voted != 'unknown':
                         votes[msp.voted] += 1
 
