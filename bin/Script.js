@@ -15,7 +15,6 @@
     }
   }
 
-
   function show(id){
     change("max");
     var elems = document.getElementsByClassName(id);

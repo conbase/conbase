@@ -3,6 +3,7 @@ from Stats import *
 import pdb
 import Params as params
 
+
 def json_to_site(f):
     for line in f:
         s = json.loads(line.strip('\n'))    
@@ -179,7 +180,7 @@ def gt_ratio(site):
                                 msp.voted = 'X'
                             else:
                                 msp.voted = 'unknown'
-                                
+
                     if msp.voted != '' and msp.voted != 'unknown':
                         votes[msp.voted] += 1
 

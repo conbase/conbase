@@ -3,6 +3,7 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 STYLE_PATH = main_directory + '/Style.css'
 SCRIPT_PATH = main_directory + '/Script.js'
 
+
 class Phylip_format(object):
     def __init__(self, path, sample_names):
         self.path = path

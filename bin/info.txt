@@ -10,3 +10,4 @@ HOW TO RUN:
 Stats.py:   python3 Main.py stats <snp path> <bam path> <reference path> <number of nodes> <output name>
 Analyze.py: python3 Main.py analyze <json path> <output name>
 
+

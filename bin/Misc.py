@@ -6,6 +6,7 @@ import multiprocessing as mp
 import argparse
 import os
 
+
 acceptable_bases = {'A','C','G','T'}
 
 def snp_in_duplicate_region(snp, bam_file, reference_genome_file):

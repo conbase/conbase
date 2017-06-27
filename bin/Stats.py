@@ -3,8 +3,8 @@ from File_Output import *
 import json
 import multiprocessing as mp
 import Params as params
-acceptable_bases = {'A','C','G','T'}
 
+acceptable_bases = {'A','C','G','T'}
 skipped_mate = 0
 
 class JSONSerializable(object):

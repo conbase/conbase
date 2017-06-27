@@ -37,3 +37,4 @@ bulk_dp_interval = (15,45) # Must have the following format (min, max)
 snp_nr_limit = 10
 snp_dist_limit = 1000
 
+
