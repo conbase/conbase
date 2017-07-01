@@ -60,9 +60,9 @@ class HTML(object):
             cell_name_type = "name"
             if site.samples[sample_name].info == "X":
                 cell_name_type = "X"
-            elif site.samples[sample_name].info == "HOMO-R" or site.samples[sample_name].info == "ADO-R":
+            elif site.samples[sample_name].info == "HOMO-R" or site.samples[sample_name].info == "ADO-R" or site.samples[sample_name].info == "HOMO-C3":
                 cell_name_type = "0"
-            elif site.samples[sample_name].info == "HET" or site.samples[sample_name].info == "ADO-A1":
+            elif site.samples[sample_name].info == "HET" or site.samples[sample_name].info == "ADO-A1" or site.samples[sample_name].info == "HET-C3":
                 cell_name_type = "1"
             elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
                 cell_name_type = "-"

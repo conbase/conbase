@@ -70,6 +70,7 @@ p {
     background-color:#7D0839;
     color:white;
 }
+
 .HOMO-R {
     background-color:#065D4E;
     color:white;
@@ -103,6 +104,24 @@ p {
     background-color:#B54373;
     color:white;
 }
+.HET-C3 {
+    background-color:#EBA5C3;
+    color:black;
+}
+.HET-C3 table{
+    background-color:#EBA5C3;
+    color:black;
+}
+.HOMO-C3 {
+    background-color:#87E1D2;
+    color:black;
+}
+
+.HOMO-C3 table{
+    background-color:#87E1D2;
+    color:black;
+}
+
 .None  {
     background-color:#E6E1E3;
 }

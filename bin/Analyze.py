@@ -60,10 +60,11 @@ def gt_ratio(site):
     for sample in site.samples.values():
         votes = {'HET':0, 'HOMO-R':0, 'HOMO-A1':0, 'ADO-R':0, 'ADO-A1':0, 'X':0}
         nr_snp_allowed_voting = 0
+        ms_pairs = dict()
         for snp_pos in sample.MSP.keys():    
             msp = sample.MSP[snp_pos]
-            
             ms_pair = define_ms_pair(snp_pos, site)
+            ms_pairs[snp_pos] = ms_pair
             het, homo_R, homo_A1 = msp.get_msp_ratio(ms_pair)
             
             if msp.get_ms_total() >= params.dp_ms_limit:
@@ -151,3 +152,19 @@ def gt_ratio(site):
                 else:
                     #TODO Homo-R = ADO-R
                     sample.info = 'X'
+        else:
+            if sample.AD[site.ALTS['A1']] >= params.c2_a1_limit:
+                sample.info = 'HET-C3'
+            else:
+                found = 0
+                for snp_pos in sample.MSP.keys():    
+                    msp = sample.MSP[snp_pos]
+                    ms_pair = ms_pairs[snp_pos]
+                    if (ms_pair == 'AA' and msp.RA > 0) or (ms_pair == 'AR' and msp.RR > 0):
+                        found += 1 
+                if found > 0:
+                    if sample.AD[site.ALTS['A1']] == 0:
+                        sample.info = 'HOMO-C3'
+                    else:
+                        sample.info = 'unknown'
+                
