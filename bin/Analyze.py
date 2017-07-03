@@ -160,7 +160,7 @@ def gt_ratio(site):
                 for snp_pos in sample.MSP.keys():    
                     msp = sample.MSP[snp_pos]
                     ms_pair = ms_pairs[snp_pos]
-                    if (ms_pair == 'AA' and msp.RA > 0) or (ms_pair == 'AR' and msp.RR > 0):
+                    if (ms_pair == 'AA' and msp.RA >= params.c2_homo_limit) or (ms_pair == 'AR' and msp.RR >= params.c2_homo_limit):
                         found += 1 
                 if found > 0:
                     if sample.AD[site.ALTS['A1']] == 0:
