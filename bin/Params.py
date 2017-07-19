@@ -22,10 +22,10 @@ msp_ratio = 0.9
 msp_internal_ratio = 0.05
 msp_c2_external_error_ratio = 1-msp_ratio
 
-c2_a1_limit = 3
-c2_homo_limit = 3
+c2_a1_limit = 1
+c2_homo_limit = 1
 
-homo_error_allowed = 0
+homo_error_allowed = 0.09
 
 ms_group_ratio = 0.01
 win_internal_group_ratio = 0.1
