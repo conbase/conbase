@@ -36,6 +36,9 @@ vote_ms_ratio_limit = 0.9
 conflicting_upper_limit = 20
 a1_lower_limit = 2
 bulk_dp_interval = (15,45) # Must have the following format (min, max)
+
+mut_nr_limit = 10
+mut_dist_limit = 1000
 ################ Misc ##################
 snp_nr_limit = 10
 snp_dist_limit = 1000

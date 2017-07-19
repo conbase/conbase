@@ -9,6 +9,39 @@ import os
 
 acceptable_bases = {'A','C','G','T'}
 
+def check_duplicate_region(sites):
+    
+    filtered_sites = list()
+    if len(sites) > params.mut_nr_limit:
+        sites_per_chrome = dict()
+        for s in sites:
+            if s.CHROM not in sites_per_chrome.keys():
+                sites_per_chrome[s.CHROM] = list()
+            sites_per_chrome[s.CHROM].append(s)
+
+        for chrom_sites in sites_per_chrome.values():
+            if len(chrom_sites) > params.mut_nr_limit:
+                for index, site in enumerate(chrom_sites):
+                    left = index+1-params.mut_nr_limit if index-params.mut_nr_limit >= 0 else 0
+                    right = index+params.mut_nr_limit if index+params.mut_nr_limit < len(chrom_sites) else len(chrom_sites)
+                    window_of_sites = chrom_sites[left:right]
+                    in_duplicate_region = False
+                    for i in range(len(window_of_sites)-params.mut_nr_limit + 1):
+                        interval = window_of_sites[i:i+params.mut_nr_limit]
+                        if max(interval, key=lambda s: s.POS).POS - min(interval, key=lambda s: s.POS).POS <= params.mut_dist_limit:
+                            in_duplicate_region = True
+                    if not in_duplicate_region:
+                        filtered_sites.append(site)
+                    else:
+                        print('removed site! position:', site.CHROM, site.real_POS())
+            else:
+                filtered_sites += chrom_sites
+    else:
+        filtered_sites = sites
+
+    return filtered_sites
+
+
 def snp_in_duplicate_region(snp, bam_file, reference_genome_file):
     sites = dict()
 
