@@ -41,7 +41,6 @@ def check_duplicate_region(sites):
 
     return filtered_sites
 
-
 def snp_in_duplicate_region(snp, bam_file, reference_genome_file):
     sites = dict()
 
