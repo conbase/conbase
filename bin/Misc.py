@@ -22,8 +22,10 @@ def check_duplicate_region(sites):
         for chrom_sites in sites_per_chrome.values():
             if len(chrom_sites) > params.mut_nr_limit:
                 for index, site in enumerate(chrom_sites):
-                    left = index+1-params.mut_nr_limit if index-params.mut_nr_limit >= 0 else 0
-                    right = index+params.mut_nr_limit if index+params.mut_nr_limit < len(chrom_sites) else len(chrom_sites)
+                    
+                    left = index-params.mut_nr_limit if index-params.mut_nr_limit >= 0 else 0
+                    right = index+params.mut_nr_limit+1 if index+params.mut_nr_limit+1 <= len(chrom_sites) else len(chrom_sites)
+                    
                     window_of_sites = chrom_sites[left:right]
                     in_duplicate_region = False
                     for i in range(len(window_of_sites)-params.mut_nr_limit + 1):
