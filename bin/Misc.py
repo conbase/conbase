@@ -28,8 +28,9 @@ def check_duplicate_region(sites):
                     
                     window_of_sites = chrom_sites[left:right]
                     in_duplicate_region = False
-                    for i in range(len(window_of_sites)-params.mut_nr_limit + 1):
-                        interval = window_of_sites[i:i+params.mut_nr_limit]
+
+                    for i in range(len(window_of_sites)-params.mut_nr_limit):
+                        interval = window_of_sites[i:i+params.mut_nr_limit + 1]
                         if max(interval, key=lambda s: s.POS).POS - min(interval, key=lambda s: s.POS).POS <= params.mut_dist_limit:
                             in_duplicate_region = True
                     if not in_duplicate_region:
