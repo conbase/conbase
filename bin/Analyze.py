@@ -137,7 +137,7 @@ def gt_ratio(site):
                     if max_vote[0][0] == 'HOMO-R' or max_vote[0][0] == 'ADO-R':
                         alts_dp = sum([v for k, v in sample.AD.items() if k != site.REF])
 
-                        if float(alts_dp)/sum(sample.AD.values()) <= params.homo_error_allowed:
+                        if sum(sample.AD.values()) > 0 and float(alts_dp)/sum(sample.AD.values()) <= params.homo_error_allowed:
                             if float(total_votes)/nr_snp_allowed_voting >= params.snp_vote_ratio:
                                 sample.info = max_vote[0][0]
                             else:
