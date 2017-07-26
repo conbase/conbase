@@ -14,7 +14,7 @@ def check_duplicate_region(sites):
     if len(sites) > misc_params["mut_nr_limit"]:
         sites_per_chrome = dict()
         for s in sites:
-            if s.CHROM not in sites_per_chrome.keys():
+            if int(s.CHROM) not in sites_per_chrome.keys():
                 sites_per_chrome[int(s.CHROM)] = list()
             sites_per_chrome[int(s.CHROM)].append(s)
 
