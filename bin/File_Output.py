@@ -4,19 +4,28 @@ STYLE_PATH = main_directory + '/Style.css'
 SCRIPT_PATH = main_directory + '/Script.js'
 
 
-class Phylip_format(object):
+class TSV(object):
     def __init__(self, path, sample_names):
         self.path = path
         self.sample_names = sample_names
-        
-    def write_sites(self, sites):
-        f = open(self.path,'w')
-        f.write("cells\t")
-        for site in sites:
-            f.write(site.CHROM + ":" + str(site.real_POS()) + "\t")
-            for sample in site.samples.values():
-                f.write(sample.info + "\t")
-            f.write("\n") 
+        self.writer = self.open()
+
+    def open(self):
+        writer = open(self.path,'w')
+        writer.write("CHROM\tPOS\t")
+        for sample_name in self.sample_names:
+            writer.write(sample_name + "\t")
+        writer.write("\n")
+        return writer
+
+    def write_site(self, site):
+        self.writer.write(site.CHROM + "\t" + str(site.real_POS()) + "\t")
+        for sample_name in self.sample_names:
+            self.writer.write(site.samples[sample_name].info + "\t")
+        self.writer.write("\n")
+
+    def close(self):
+        self.writer.close()
 
 class HTML(object):
     def __init__(self, path, sample_names, stats_params, analyze_params, misc_params):

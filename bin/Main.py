@@ -40,7 +40,8 @@ if __name__ == '__main__':
         stats_params_in_json = json.loads(f.readline().strip('\n'))['stats_params']
 
         html = File_Output.HTML(output_name + ".html", samples_names, stats_params_in_json, analyze_params, misc_params)
-        # phylip = File_Output.Phylip_format(output_name + ".txt", samples_names)
+        tsv = File_Output.TSV(output_name + ".tsv", samples_names)
+
         sites = Analyze.json_to_site(f)
         my_sites = []
         for site in sites:
@@ -64,7 +65,9 @@ if __name__ == '__main__':
         my_sites = Misc.check_duplicate_region(my_sites)
         for site in my_sites:
             html.write_site(site)
-        # phylip.write_sites(my_sites)
+            tsv.write_site(site)
         html.close()
+        tsv.close()
+        
         print('Done! ' + output_name + '.html')
 
