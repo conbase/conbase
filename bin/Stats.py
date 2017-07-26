@@ -2,7 +2,7 @@ import sys, csv, pysam, os
 from File_Output import *
 import json
 import multiprocessing as mp
-import Params as params
+from Params import stats_params
 
 acceptable_bases = {'A','C','G','T'}
 skipped_mate = 0
@@ -191,15 +191,15 @@ def get_reads(snp, bams):
     for bam_name, bam_file in bams:
         reads = list()
         mates = dict()
-        left = snp.POS-params.fragment_length
-        right = snp.POS+params.fragment_length
+        left = snp.POS-stats_params["fragment_length"]
+        right = snp.POS+stats_params["fragment_length"]
 
         if left < 0:
             left = 0
 #        print(bam_name)
 
         for read in bam_file.fetch(snp.CHROM,  left, right):
-            if read.mapping_quality >= params.mapping_quality and read.is_paired and read.is_proper_pair:
+            if read.mapping_quality >= stats_params["mapping_quality"] and read.is_paired and read.is_proper_pair:
                 r = Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                     read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
                 if snp.POS in r.bases.keys():
@@ -251,7 +251,7 @@ def snp_limits(snp, reads):
     end = list()
     found_snp = False
     for sample_name, sample_reads in reads.items():
-        if snp.samples[sample_name].snp_reads > params.snp_read_limit:
+        if snp.samples[sample_name].snp_reads > stats_params["snp_read_limit"]:
             found_snp = True
             start_sample = list()
             end_sample = list()
@@ -271,7 +271,7 @@ def allele_counter(reads, site, pos):
         for read in sample_reads:
             if pos in read.bases.keys():
                 base = read.bases[pos].upper()
-                if base in acceptable_bases and read.bases[pos] != None and read.base_quality[pos] > params.base_quality:
+                if base in acceptable_bases and read.bases[pos] != None and read.base_quality[pos] > stats_params["base_quality"]:
                     site.samples[sample_name].AD[base] += 1
                 elif base in {'D', 'I'}:
                      site.samples[sample_name].indels += 1
@@ -280,7 +280,7 @@ def is_indel(site):
     tot_indel_ratio = 0.0
     for sample in site.samples.values():
         tot_indel_ratio += float(sample.indels)/sum(sample.AD.values()) if sum(sample.AD.values()) > 0 else 0
-    return (tot_indel_ratio/len(site.samples)) > params.indel_ratio
+    return (tot_indel_ratio/len(site.samples)) > stats_params["indel_ratio"]
 
 def ratio(num1, num2):
     if (num1 + num2) > 0:
@@ -295,10 +295,10 @@ def define_altenative(site):
             lst = []
             for b in sample.AD.keys(): 
                 if b != site.REF:
-                    if ratio(sample.AD[b], sample.AD[site.REF]) >= params.alt_ratio_limit and \
-                     (sample.AD[site.REF]+sample.AD[b]) >= params.dp_limit:
+                    if ratio(sample.AD[b], sample.AD[site.REF]) >= stats_params["alt_ratio_limit"] and \
+                     (sample.AD[site.REF]+sample.AD[b]) >= stats_params["dp_limit"]:
                         lst.append((b, sample.AD[b]))
-                    elif ratio(sample.AD[b], sample.AD[site.REF]) <= params.alt_ratio_limit and sample.AD[b] >= params.dp_limit:
+                    elif ratio(sample.AD[b], sample.AD[site.REF]) <= stats_params["alt_ratio_limit"] and sample.AD[b] >= stats_params["dp_limit"]:
                         lst.append((b, sample.AD[b]))
 
             if lst != []:
@@ -315,7 +315,7 @@ def define_altenative(site):
 
         site.ALTS = {'A1': None, 'A2': None, 'A3':None}
 
-        if vote_ratio >= params.vote_ratio_limit and len(max_vote_allele) >= params.sample_vote_limit:
+        if vote_ratio >= stats_params["vote_ratio_limit"] and len(max_vote_allele) >= stats_params["sample_vote_limit"]:
             i = 1
             for b in max_vote_allele:
                 if b[1] != 0:
@@ -340,7 +340,7 @@ def mut_snp(snp, sites, reads):
                         print("Base not in snp mate pos", snp.POS)
 
                 for pos in read.bases.keys():
-                    if pos in sites.keys() and sites[pos].TYPE != 'SNP' and read.base_quality[pos] >= params.base_quality:
+                    if pos in sites.keys() and sites[pos].TYPE != 'SNP' and read.base_quality[pos] >= stats_params["base_quality"]:
                         count_MS(sites[pos], snp, read.bases[pos], snp_read.bases[snp.POS], sample_name)
 
 
@@ -364,10 +364,10 @@ def bulk_stats(site, bulk_bam):
 
     bases = {"A":0, "C":0, "G":0, "T":0}
     for read in bulk_bam.fetch(site.CHROM,  site.POS, site.POS+1):
-        if read.mapping_quality >= params.mapping_quality:
+        if read.mapping_quality >= stats_params["mapping_quality"]:
             r = Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                 read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
-            if site.POS in r.base_quality.keys() and r.base_quality[site.POS] >= params.base_quality:
+            if site.POS in r.base_quality.keys() and r.base_quality[site.POS] >= stats_params["base_quality"]:
                 base = r.bases[site.POS]
                 if base in bases.keys():
                     bases[base] += 1
@@ -382,7 +382,7 @@ def bulk_stats(site, bulk_bam):
         site.BULK_INFO['SUM'] = T           
         
         bulk_bases = 0
-        if site.TYPE != 'SNP' and float(site.BULK_INFO[site.REF])/T < params.bulk_ref_limit:
+        if site.TYPE != 'SNP' and float(site.BULK_INFO[site.REF])/T < stats_params["bulk_ref_limit"]:
             site.TYPE = 'E'
         # for v in site.BULK_INFO.values():
         #     if v > 0:
@@ -420,7 +420,7 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
             old_end = 0
             continue
         
-        if new_start - old_end > params.fragment_length:
+        if new_start - old_end > stats_params["fragment_length"]:
             for s in sites.values():
                 if s.TYPE == '':
                     bulk_stats(s, bam_bulk)
@@ -499,7 +499,7 @@ def snps_to_chunks(snps_path, nodes, output_name):
         current_row_chrom = int(row['CHROM'])
 
         if i > chunk_size:
-            if (prev_row_pos != None and prev_row_chrom != None) and abs(current_row_pos - prev_row_pos) >= params.fragment_length*2 or current_row_chrom != prev_row_chrom:
+            if (prev_row_pos != None and prev_row_chrom != None) and abs(current_row_pos - prev_row_pos) >= stats_params["fragment_length"]*2 or current_row_chrom != prev_row_chrom:
                 i = 0
                 current_chunk_file.close()
 
@@ -576,6 +576,7 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
 
     f = open( '../results/' + output_name + '.json', 'w')
     f.write('{' + '"samples":' + json.dumps(sample_names) + '}\n')
+    f.write('{' + '"stats_params":' + json.dumps(stats_params) + '}\n')
     f.close()
 
     for i in range(nr_chunks):

@@ -1,5 +1,5 @@
 import Stats, Analyze, File_Output
-import Params as params
+from Params import analyze_params
 import argparse, json
 import Misc
 
@@ -23,9 +23,6 @@ if __name__ == '__main__':
 
     if args.stats is not None:
         snps_path = args.stats[0]
-        # Pre-processing of SNP file where we will remove all SNP sites if there are regions of 
-        # snp_nr_limit nr of SNPs within snp_dist_limit bases, can be commented out if not wanted
-        # snps_path = Misc.remove_snp_duplicate_region(snps_path, params.snp_nr_limit, params.snp_dist_limit)
 
         bam_paths = args.stats[1]
         reference_path = args.stats[2]
@@ -40,16 +37,17 @@ if __name__ == '__main__':
         output_name =  '../results/' + args.analyze[1]
         f = open(json_path)
         samples_names = json.loads(f.readline().strip('\n'))['samples']
+        stats_params_in_json = json.loads(f.readline().strip('\n'))['stats_params']
 
-        html = File_Output.HTML(output_name + ".html", samples_names)
+        html = File_Output.HTML(output_name + ".html", samples_names, stats_params_in_json, analyze_params, misc_params)
         # phylip = File_Output.Phylip_format(output_name + ".txt", samples_names)
         sites = Analyze.json_to_site(f)
         my_sites = []
         for site in sites:
             Analyze.gt_ratio(site)
-            if site.TYPE == '' and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= params.bulk_dp_interval[0] and site.BULK_INFO['SUM'] <= params.bulk_dp_interval[1]:
+            if site.TYPE == '' and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= analyze_params["bulk_dp_interval"][0] and site.BULK_INFO['SUM'] <= analyze_params["bulk_dp_interval"][1]:
                 bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
-                if bulk_a1_ratio <= (1 - params.bulk_ref_limit):
+                if bulk_a1_ratio <= (1 - stats_params_in_json["bulk_ref_limit"]):
                     nr_conflicting = 0
                     nr_a1 = 0
                     for sample in site.samples.values():
@@ -58,7 +56,7 @@ if __name__ == '__main__':
                         elif (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1'):
                             nr_a1 += 1
 
-                    if nr_a1 >= params.a1_lower_limit and nr_conflicting <= params.conflicting_upper_limit:
+                    if nr_a1 >= analyze_params["a1_lower_limit"] and nr_conflicting <= analyze_params["conflicting_upper_limit"]:
                         print(site.CHROM + ':' + str(site.real_POS()))
                         my_sites.append(site)
             
