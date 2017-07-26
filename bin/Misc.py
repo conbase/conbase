@@ -1,18 +1,17 @@
 import csv
 import Stats
-import Params as params
+from Params import misc_params, stats_params
 import pysam
 import multiprocessing as mp
 import argparse
 import os
-
 
 acceptable_bases = {'A','C','G','T'}
 
 def check_duplicate_region(sites):
     
     filtered_sites = list()
-    if len(sites) > params.mut_nr_limit:
+    if len(sites) > misc_params["mut_nr_limit"]:
         sites_per_chrome = dict()
         for s in sites:
             if s.CHROM not in sites_per_chrome.keys():
@@ -20,18 +19,18 @@ def check_duplicate_region(sites):
             sites_per_chrome[s.CHROM].append(s)
 
         for chrom_sites in sites_per_chrome.values():
-            if len(chrom_sites) > params.mut_nr_limit:
+            if len(chrom_sites) > misc_params["mut_nr_limit"]:
                 for index, site in enumerate(chrom_sites):
                     
-                    left = index-params.mut_nr_limit if index-params.mut_nr_limit >= 0 else 0
-                    right = index+params.mut_nr_limit+1 if index+params.mut_nr_limit+1 <= len(chrom_sites) else len(chrom_sites)
+                    left = index-misc_params["mut_nr_limit"] if index-misc_params["mut_nr_limit"] >= 0 else 0
+                    right = index+misc_params["mut_nr_limit"]+1 if index+misc_params["mut_nr_limit"]+1 <= len(chrom_sites) else len(chrom_sites)
                     
                     window_of_sites = chrom_sites[left:right]
                     in_duplicate_region = False
 
-                    for i in range(len(window_of_sites)-params.mut_nr_limit):
-                        interval = window_of_sites[i:i+params.mut_nr_limit + 1]
-                        if max(interval, key=lambda s: s.POS).POS - min(interval, key=lambda s: s.POS).POS <= params.mut_dist_limit:
+                    for i in range(len(window_of_sites)-misc_params["mut_nr_limit"]):
+                        interval = window_of_sites[i:i+misc_params["mut_nr_limit"] + 1]
+                        if max(interval, key=lambda s: s.POS).POS - min(interval, key=lambda s: s.POS).POS <= misc_params["mut_dist_limit"]:
                             in_duplicate_region = True
                     if not in_duplicate_region:
                         filtered_sites.append(site)
@@ -47,16 +46,16 @@ def check_duplicate_region(sites):
 def snp_in_duplicate_region(snp, bam_file, reference_genome_file):
     sites = dict()
 
-    left = snp['POS']-params.snp_dist_limit if snp['POS']-params.snp_dist_limit > 0 else 0
-    right = snp['POS']+params.snp_dist_limit
+    left = snp['POS']-misc_params["snp_dist_limit"] if snp['POS']-misc_params["snp_dist_limit"] > 0 else 0
+    right = snp['POS']+misc_params["snp_dist_limit"]
 
     for read in bam_file.fetch(snp['CHROM'], left, right):
-        if read.mapping_quality >= params.mapping_quality and read.is_paired and read.is_proper_pair:
+        if read.mapping_quality >= stats_params["mapping_quality"] and read.is_paired and read.is_proper_pair:
             r = Stats.Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                 read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
 
             for pos in r.bases.keys():
-                if pos >= left and pos <= right and r.base_quality[pos] > params.base_quality:
+                if pos >= left and pos <= right and r.base_quality[pos] > stats_params["base_quality"]:
                     if pos not in sites.keys():
                         sites[pos] = {'A':0, 'C':0, 'G':0, 'T':0}
                     sites[pos][r.bases[pos].upper()] += 1
@@ -66,15 +65,15 @@ def snp_in_duplicate_region(snp, bam_file, reference_genome_file):
     for pos in pos_list:
         ref = reference[pos]
         T = sum(sites[pos].values())
-        if ref not in acceptable_bases or float(sites[pos][ref])/T >= params.bulk_ref_limit:
+        if ref not in acceptable_bases or float(sites[pos][ref])/T >= stats_params["bulk_ref_limit"]:
             sites.pop(pos)
     
     pos_list = sorted(list(sites.keys()))
     in_duplicate_region = False
-    if len(pos_list) > params.snp_nr_limit:
-        for i in range(len(pos_list)-params.snp_nr_limit + 1):
-            interval = pos_list[i:i+params.snp_nr_limit]
-            if max(interval) - min(interval) <= params.snp_dist_limit:
+    if len(pos_list) > misc_params["snp_nr_limit"]:
+        for i in range(len(pos_list)-misc_params["snp_nr_limit"] + 1):
+            interval = pos_list[i:i+misc_params["snp_nr_limit"]]
+            if max(interval) - min(interval) <= misc_params["snp_dist_limit"]:
                 in_duplicate_region = True
                 break
     return in_duplicate_region
