@@ -113,7 +113,7 @@ class HTML(object):
         stats = list(self.stats_params.items())
         analyze = list(self.analyze_params.items())
         misc = list(self.misc_params.items())
-        self.source_code.append('\n<tr class="params_name_row"><td></td><td>Bulk params</td><td></td><td>Analyze params</td><td></td><td>Misc params</td><td></td></tr>\n')
+        self.source_code.append('\n<tr class="params_name_row"><td></td><td>Stats params</td><td></td><td>Analyze params</td><td></td><td>Misc params</td><td></td></tr>\n')
 
         for i in range(rows):
             self.source_code.append('\n<tr><td></td>\n')
