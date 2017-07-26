@@ -1,4 +1,4 @@
-import os, Params as params
+import os
 main_directory = os.path.dirname(os.path.realpath(__file__))
 STYLE_PATH = main_directory + '/Style.css'
 SCRIPT_PATH = main_directory + '/Script.js'
