@@ -14,17 +14,10 @@ class Phylip_format(object):
         f.write("cells\t")
         for site in sites:
             f.write(site.CHROM + ":" + str(site.real_POS()) + "\t")
-
-        for sample in self.sample_names:
+            for sample in site.samples.values():
+                f.write(sample.info + "\t")
             f.write("\n") 
-            f.write(sample + "\t")
-            for site in sites:
-                if (site.samples[sample].info == "HET" or site.samples[sample].info == "ADO-A1"):
-                    f.write("1\t")
-                elif (site.samples[sample].info == "HOMO-R" or site.samples[sample].info == "ADO-R"):
-                    f.write("0\t")
-                else:
-                    f.write("?\t")
+
 class HTML(object):
     def __init__(self, path, sample_names, stats_params, analyze_params, misc_params):
         self.path = path
