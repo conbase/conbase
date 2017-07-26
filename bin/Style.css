@@ -9,6 +9,20 @@ body{
     width:100%;
 
 }
+.params {
+    color:#515151;
+    margin:20px;
+    background-color:#e6e1e3;
+    width:100%;
+    border-radius: 10px;
+}
+.params p {
+    text-align:left;
+}
+.params_name_row {
+    font-size:larger;
+    font-weight:bolder;
+}
 .clicker {
     text-align: center;
     width: 100%;

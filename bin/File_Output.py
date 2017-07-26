@@ -26,10 +26,13 @@ class Phylip_format(object):
                 else:
                     f.write("?\t")
 class HTML(object):
-    def __init__(self, path, sample_names):
+    def __init__(self, path, sample_names, stats_params, analyze_params, misc_params):
         self.path = path
         self.sample_names = sample_names
         self.source_code = self.open()
+        self.stats_params = stats_params
+        self.analyze_params = analyze_params
+        self.misc_params = misc_params
 
     def open(self):
         source_code = ['<html>\n<head>\n<style>\n']
@@ -37,9 +40,7 @@ class HTML(object):
         source_code.append("</style>\n<script>\n")
         source_code.append(open(SCRIPT_PATH).read())
         source_code.append("</script>\n</head>\n<body>")
-        source_code.append('<body><div id="button"> <button type="button" id="btn" onclick="change(\'min\')">Zoom out</button> <img height="30px" src="https://s17.postimg.org/bb0oek5i7/conbase.gif" style="float:right;  margin-right:20px"><br/>')
-        params_line = 'dp_ms_limit: ' + str(params.dp_ms_limit) + ', msp_ratio: ' + str(params.msp_ratio) + ', msp_internal_ratio: ' + str(params.msp_internal_ratio) + '</div>' 
-        source_code.append(params_line)
+        source_code.append('<body><div id="button"> <button type="button" id="btn" onclick="change(\'min\')">Zoom out</button> <img height="30px" src="https://s17.postimg.org/bb0oek5i7/conbase.gif" style="float:right;  margin-right:20px"><br/></div>')
         source_code.append('\n<table id="data"><tr><td class="cell"> position</td><td class="cell">BULK</td>\n')
         for sample_name in self.sample_names:
             source_code.append('<td class="cell">' + sample_name + '</td>')
@@ -106,8 +107,37 @@ class HTML(object):
         self.source_code.append('</tr>\n')
        
         
+    def write_params(self):
+        self.source_code.append('\n<br><br><br><table class="params">\n')
+        rows = max(len(self.stats_params), len(self.analyze_params), len(self.misc_params))
+        stats = list(self.stats_params.items())
+        analyze = list(self.analyze_params.items())
+        misc = list(self.misc_params.items())
+        self.source_code.append('\n<tr class="params_name_row"><td></td><td>Bulk params</td><td></td><td>Analyze params</td><td></td><td>Misc params</td><td></td></tr>\n')
+
+        for i in range(rows):
+            self.source_code.append('\n<tr><td></td>\n')
+            if stats:
+                key, value = stats.pop(0)
+                self.source_code.append('<td><p>' + str(key) + ':</p></td><td><p>' + str(value) + '</p></td>')
+            else:
+                self.source_code.append('<td></td><td></td>')
+            if analyze:
+                key, value = analyze.pop(0)
+                self.source_code.append('<td><p>' + str(key) + ':</p></td><td><p>' + str(value) + '</p></td>')
+            else:
+                self.source_code.append('<td></td><td></td>')
+            if misc:
+                key, value = misc.pop(0)
+                self.source_code.append('<td><p>' + str(key) + ':</p></td><td><p>' + str(value) + '</p></td>')
+            else:
+                self.source_code.append('<td></td><td></td>')
+            self.source_code.append('\n</tr>\n')    
+        self.source_code.append('\n</table>\n')
+
     def close(self):
         self.source_code.append('\n</table>\n')
+        self.write_params()
         self.source_code.append('</body>\n</html>')
         f = open(self.path,'w')
         f.write("".join(self.source_code))
