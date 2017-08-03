@@ -27,8 +27,8 @@ class TABLE_PLOT(object):
             self.close()
 
     def open(self,bbox):
-        import matplotlib.pyplot as plt
-        import numpy as np
+        import matplotlib; matplotlib.use('agg')
+        import pylab as plt
         from matplotlib.table import Table
 
         fig, ax = plt.subplots()
