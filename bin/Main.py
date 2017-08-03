@@ -54,7 +54,7 @@ if __name__ == '__main__':
                     for sample in site.samples.values():
                         if sample.info == 'X':
                             nr_conflicting += 1
-                        elif (sample.info == 'HET' or sample.info == 'ADO-A1' or sample.info == 'HOMO-A1'):
+                        elif (sample.info == 'HET-C1' or sample.info == 'HET-C2' or sample.info == 'HOMO-A1'):
                             nr_a1 += 1
 
                     if nr_a1 >= analyze_params["a1_lower_limit"] and nr_conflicting <= analyze_params["conflicting_upper_limit"]:
@@ -68,6 +68,9 @@ if __name__ == '__main__':
             tsv.write_site(site)
         html.close()
         tsv.close()
+
+        table_plot = File_Output.TABLE_PLOT(output_name + ".pdf", samples_names, my_sites)
+        
         
         print('Done! ' + output_name + '.html')
 

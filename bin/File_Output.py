@@ -3,6 +3,63 @@ main_directory = os.path.dirname(os.path.realpath(__file__))
 STYLE_PATH = main_directory + '/Style.css'
 SCRIPT_PATH = main_directory + '/Script.js'
 
+class TABLE_PLOT(object):
+    def __init__(self, path, sample_names, sites=[], bbox=[0,0,0.5,1]):    
+        self.path = path
+        self.sample_names = sample_names
+        self.row = 0
+        self.width = 0.1
+        self.height = 0.1
+        if sites == []:
+            self.plt, self.ax, self.tb = self.open(bbox)
+        else:
+            nrow = len(sites)+1
+            ncol = len(sample_names)+1
+            if nrow >= ncol:
+                box_height = 1
+                box_width = float(ncol)/nrow
+            else:
+                box_height = float(nrow)/ncol
+                box_width = 1
+            self.plt, self.ax, self.tb = self.open(bbox=[0,0,box_width,box_height])
+            for site in sites:
+                self.write_site(site)
+            self.close()
+
+    def open(self,bbox):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from matplotlib.table import Table
+
+        fig, ax = plt.subplots()
+        ax.set_axis_off()
+        tb = Table(ax, bbox=bbox)
+        tb.add_cell(self.row, 0, self.width*2, self.height, text="", loc='center', edgecolor='none', facecolor='none')
+
+        for col, sample in enumerate(self.sample_names):
+            tb.add_cell(self.row, col+1, self.width, self.height, text=str(col+1), loc='center', edgecolor='none', facecolor='none')
+        self.row += 1
+        return plt, ax, tb
+
+    def write_site(self, site):
+        chrom_pos_str = site.CHROM + ":" + str(site.real_POS())
+        self.tb.add_cell(self.row, 0, self.width*2, self.height, text=chrom_pos_str, loc='right', edgecolor='none', facecolor='none')
+        
+        color_dict = {"HET-C1":"#7D0839", "HET-C2":"#B54373" ,"HET-C3":"#EBA5C3" ,"HOMO-C1": "#065D4E" ,"HOMO-C2":"#0FA38A" ,"HOMO-C3":"#87E1D2" , "HOMO-A1":"#B26321", "NOT-INFORMATIVE":"#BBBBBB","CONFLICT":"#000000", "UNKNOWN":"#424242"}
+        for col, sample_name in enumerate(self.sample_names):
+            color = "white"
+            if site.samples[sample_name].info in color_dict.keys():
+                color = color_dict[site.samples[sample_name].info]
+            self.tb.add_cell(self.row, col+1, self.width, self.height, text="", loc='center', facecolor=color)
+        self.row += 1
+
+    def close(self):
+        table_props = self.tb.properties()
+        table_cells = table_props['child_artists']
+        for cell in table_cells: 
+            cell._text.set_fontsize(4)
+        self.ax.add_table(self.tb)
+        self.plt.savefig(self.path, dpi=2000)    
 
 class TSV(object):
     def __init__(self, path, sample_names):
@@ -12,16 +69,20 @@ class TSV(object):
 
     def open(self):
         writer = open(self.path,'w')
-        writer.write("CHROM\tPOS\t")
+        writer.write("CHROM\tPOS\tBULK-DP:A1-RATIO\t")
         for sample_name in self.sample_names:
-            writer.write(sample_name + "\t")
+            writer.write(sample_name + ":DP" + "\t")
         writer.write("\n")
         return writer
 
     def write_site(self, site):
-        self.writer.write(site.CHROM + "\t" + str(site.real_POS()) + "\t")
+        bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
+        bulk_a1_ratio_str = ""
+        if bulk_a1_ratio > 0:
+            bulk_a1_ratio_str = '{0:.2f}'.format(bulk_a1_ratio)
+        self.writer.write(site.CHROM + "\t" + str(site.real_POS()) + "\t" + str(site.BULK_INFO['SUM']) + ':' + bulk_a1_ratio_str + "\t" )
         for sample_name in self.sample_names:
-            self.writer.write(site.samples[sample_name].info + "\t")
+            self.writer.write(site.samples[sample_name].info + ":" + str(sum(site.samples[sample_name].AD.values())) + "\t")
         self.writer.write("\n")
 
     def close(self):
@@ -61,23 +122,21 @@ class HTML(object):
 
         for sample_name in self.sample_names:
             cell_name_type = "name"
-            if site.samples[sample_name].info == "X":
-                cell_name_type = "X"
-            elif site.samples[sample_name].info == "HOMO-R" or site.samples[sample_name].info == "ADO-R" or site.samples[sample_name].info == "HOMO-C3":
+            if site.samples[sample_name].info == "CONFLICT":
+                cell_name_type = "conflict"
+            elif site.samples[sample_name].info == "HOMO-C1" or site.samples[sample_name].info == "HOMO-C2" or site.samples[sample_name].info == "HOMO-C3":
                 cell_name_type = "0"
-            elif site.samples[sample_name].info == "HET" or site.samples[sample_name].info == "ADO-A1" or site.samples[sample_name].info == "HET-C3":
+            elif site.samples[sample_name].info == "HET-C1" or site.samples[sample_name].info == "HET-C2" or site.samples[sample_name].info == "HET-C3":
                 cell_name_type = "1"
-            elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
-                cell_name_type = "-"
-            elif site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) > 0:
+            elif site.samples[sample_name].info == "UNKNOWN":
+                cell_name_type = "unkown"
+            elif site.samples[sample_name].info == "NOT-INFORMATIVE":
                 cell_name_type = "not informative"
-            elif site.samples[sample_name].info == "unknown":
-                cell_name_type = "?"
-            if site.samples[sample_name].info == "None" and sum(site.samples[sample_name].AD.values()) == 0:
-                self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker" style="opacity:0.0" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
-            
-            else:
-                self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker " onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
+            elif site.samples[sample_name].info == "ZERO-READS":
+                cell_name_type = "-"
+
+            self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker " onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
+           
             self.source_code.append('<table class="hidden ' + 'hidden_' +  site.CHROM + '_' + str(site.real_POS()) + '">\n')
             self.source_code.append('<tr><td colspan=5><strong>' + sample_name + '</strong>: ' + site.samples[sample_name].get_AD(site) + '</td></tr>')
 
@@ -86,7 +145,7 @@ class HTML(object):
             for snp_pos, msp in msp_list:
                 if msp.get_ms_total() > 0:
                     if msp.voted != '':
-                        if msp.voted == 'unknown':
+                        if msp.voted == 'UNKNOWN':
                             self.source_code.append('<tr><td class="voted_unknown" colspan=5>SNP: ' + str(snp_pos+1) + ' (ms: ' + str(site.snp_ms_win[snp_pos]) + ', voted: ' + msp.voted + ')</td></tr>\n')
                         else:
                             self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + ' (ms: ' + str(site.snp_ms_win[snp_pos]) + ', voted: ' + msp.voted + ')</td></tr>\n')

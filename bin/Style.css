@@ -66,30 +66,30 @@ p {
     line-height:2em;
 }
 
-.X {
+.CONFLICT {
     background-color:#000000;
     color:white;   
 }
 
-.X table{
+.CONFLICT table{
     background-color:#000000;
     color:white;
 }
 
-.HET {
+.HET-C1 {
     background-color:#7D0839;
     color:white;
 }
-.HET table{
+.HET-C1 table{
     background-color:#7D0839;
     color:white;
 }
 
-.HOMO-R {
+.HOMO-C1 {
     background-color:#065D4E;
     color:white;
 }
-.HOMO-R table{
+.HOMO-C1 table{
     background-color:#065D4E;
     color:white;
 }
@@ -101,23 +101,25 @@ p {
     background-color:#B26321;
     color:white;
 }
-.ADO-R {
+.HET-C2 {
+    background-color:#B54373;
+    color:white;
+}
+.HET-C2 table{
+    background-color:#B54373;
+    color:white;
+}
+
+.HOMO-C2 {
     background-color:#0FA38A;
     color:white;
 }
 
-.ADO-R table{
+.HOMO-C2 table{
     background-color:#0FA38A;
     color:white;
 }
-.ADO-A1 {
-    background-color:#B54373;
-    color:white;
-}
-.ADO-A1 table{
-    background-color:#B54373;
-    color:white;
-}
+
 .HET-C3 {
     background-color:#EBA5C3;
     color:black;
@@ -136,15 +138,12 @@ p {
     color:black;
 }
 
-.None  {
-    background-color:#E6E1E3;
-}
-.unknown {
+.UNKNOWN {
     background-color:#424242;
     color:white;   
 }
 
-.unknown table{
+.UNKNOWN table{
     background-color:#424242;
     color:white;
 }
@@ -153,12 +152,27 @@ p {
     background-color: #b5f0b4;
 }
 
-.None table {
-    background-color:#E6E1E3;
+.ZERO-READS  {
+    background-color:#FFFFFF;
+    opacity:0.0;
 }
-.None td {
+.ZERO-READS table {
+    background-color:#FFFFFF;
+}
+.ZERO-READS td {
     color:black;
 }
+
+.NOT-INFORMATIVE  {
+    background-color:#BBBBBB;
+}
+.NOT-INFORMATIVE table {
+    background-color:#BBBBBB;
+}
+.NOT-INFORMATIVE td {
+    color:black;
+}
+
 .info{color:black;}
 
 .cell{

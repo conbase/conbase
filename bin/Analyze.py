@@ -47,7 +47,7 @@ def define_ms_pair(snp_pos, site):
                 #het gets to vote
                 pairs[max_name] += 1
             elif(ratio(sum(min_),sum(max_)) < analyze_params["ms_group_ratio"] and max((RR, 'RR'), (RA, 'RA'), (AR, 'AR'), (AA, 'AR'))[1] in {'AR', 'AA'}):
-                #ado-a1 gets to vote
+                #HET-C2 gets to vote
                 pairs[max_name] += 1
 
     max_pair = sorted(list(pairs.items()), reverse=True, key=lambda x: x[1])
@@ -58,7 +58,7 @@ def define_ms_pair(snp_pos, site):
 
 def gt_ratio(site):
     for sample in site.samples.values():
-        votes = {'HET':0, 'HOMO-R':0, 'HOMO-A1':0, 'ADO-R':0, 'ADO-A1':0, 'X':0}
+        votes = {'HET-C1':0, 'HET-C2':0, 'HOMO-C1':0,'HOMO-C2':0, 'HOMO-A1':0, 'CONFLICT':0}
         nr_snp_allowed_voting = 0
         ms_pairs = dict()
         for snp_pos in sample.MSP.keys():    
@@ -74,84 +74,84 @@ def gt_ratio(site):
                 if ms_pair != None:
                     site.snp_ms_win[snp_pos] = ms_pair              
                     nr_snp_allowed_voting += 1
-                    ##CASE: ADO-R or ADO-A1
+                    ##CASE: HOMO-C2 or HET-C2
                     if het[2] < analyze_params["msp_internal_ratio"] and homo_R[2] < analyze_params["msp_internal_ratio"]:
                         if homo_R[1] >= analyze_params["msp_ratio"] and het[1] < analyze_params["msp_c2_external_error_ratio"]:
                             hr = max((msp.RR, 'RR'), (msp.RA, 'RA'))
                             if (hr[1] == 'RR' and ms_pair == 'AR') or (hr[1] =='RA' and ms_pair == 'AA'):
-                                msp.voted = 'ADO-R' #we know for certain this is not a mutation
+                                msp.voted = 'HOMO-C2' #we know for certain this is not a mutation
                             else:
-                                msp.voted = 'unknown'
+                                msp.voted = 'UNKNOWN'
                         elif homo_R[1] < analyze_params["msp_c2_external_error_ratio"] and het[1] >= analyze_params["msp_ratio"]:
                             ha = max((msp.AA, 'AA'), (msp.AR, 'AR'))
                             if (ha[1] == 'AA' and ms_pair == 'AR') or (ha[1] =='AR' and ms_pair == 'AA'):
-                                msp.voted = 'X'#this is contradictory
+                                msp.voted = 'CONFLICT'#this is contradictory
                             else:
-                                msp.voted = 'ADO-A1'
+                                msp.voted = 'HET-C2'
                         else:
-                            msp.voted = 'unknown'
+                            msp.voted = 'UNKNOWN'
 
-                    ##CASE: HET or HOMO-R or HOMO-A1 if it's only one true msp
+                    ##CASE: HET or HOMO-C1 or HOMO-A1 if it's only one true msp
                     else:
                         msp_list = [m for m in [het, homo_R, homo_A1] if m[1] >= analyze_params["msp_ratio"] and m[2] >= analyze_params["msp_internal_ratio"]]
                         if len(msp_list) == 1:
-                            if msp_list[0][0] == 'HET':
+                            if msp_list[0][0] == 'HET-C1':
                                 if msp_list[0][3] == ms_pair:
-                                    msp.voted = 'HET'   #mut-snp pair match!
+                                    msp.voted = 'HET-C1'   #mut-snp pair match!
                                 else:                   
-                                    msp.voted = 'X'              #match is not right
+                                    msp.voted = 'CONFLICT'              #match is not right
                             else:
-                                msp.voted = msp_list[0][0]       #homo-R or homo-A1
+                                msp.voted = msp_list[0][0]       #homo-C1 or homo-A1
                         elif len(msp_list) > 1:
-                            msp.voted = 'X'
+                            msp.voted = 'CONFLICT'
                         else:
                             error_list = [m for m in [het, homo_R, homo_A1] if m[1] >= analyze_params["msp_c2_external_error_ratio"] and m[2] >= analyze_params["msp_internal_ratio"]]
                             if len(error_list) > 1:
-                                msp.voted = 'X'
+                                msp.voted = 'CONFLICT'
                             else:
-                                msp.voted = 'unknown'
+                                msp.voted = 'UNKNOWN'
 
-                    if msp.voted != '' and msp.voted != 'unknown':
+                    if msp.voted != '' and msp.voted != 'UNKNOWN':
                         votes[msp.voted] += 1
 
         for k,v in list(votes.items()):
-            if k == 'ADO-A1' and votes['HOMO-A1'] == 0 and votes['HET'] > 0:
-                votes['HET'] += v
+            if k == 'HET-C2' and votes['HOMO-A1'] == 0 and votes['HET-C1'] > 0:
+                votes['HET-C1'] += v
                 votes[k] = 0
-            elif k == 'ADO-A1' and votes['HET'] == 0 and votes['HOMO-A1'] > 0 :
+            elif k == 'HET-C2' and votes['HET-C1'] == 0 and votes['HOMO-A1'] > 0 :
                 votes['HOMO-A1'] += v
                 votes[k] = 0
-            elif k == 'ADO-R' and votes['HOMO-R'] > 0:
-                votes['HOMO-R'] += v
+            elif k == 'HOMO-C2' and votes['HOMO-C1'] > 0:
+                votes['HOMO-C1'] += v
                 votes[k] = 0
         
 
         total_votes = sum(list(votes.values()))
         if total_votes >= 1:
-            if votes['ADO-R'] != 0 and votes['ADO-A1'] != 0:
-                sample.info = 'X'
+            if votes['HOMO-C2'] != 0 and votes['HET-C2'] != 0:
+                sample.info = 'CONFLICT'
             else:
                 max_vote = sorted(votes.items(), reverse = True, key = lambda t: t[1])
                 vote_limit = max_vote[0][1]/total_votes
                 if vote_limit >= analyze_params["snp_total_vote"]:
-                    if max_vote[0][0] == 'HOMO-R' or max_vote[0][0] == 'ADO-R':
+                    if max_vote[0][0] == 'HOMO-C1' or max_vote[0][0] == 'HOMO-C2':
                         alts_dp = sum([v for k, v in sample.AD.items() if k != site.REF])
 
                         if sum(sample.AD.values()) > 0 and float(alts_dp)/sum(sample.AD.values()) <= analyze_params["homo_error_allowed"]:
                             if float(total_votes)/nr_snp_allowed_voting >= analyze_params["snp_vote_ratio"]:
                                 sample.info = max_vote[0][0]
                             else:
-                                sample.info = 'unknown'
+                                sample.info = 'UNKNOWN'
                         else:
-                            sample.info = 'X'
+                            sample.info = 'CONFLICT'
                     else:
                         if float(total_votes)/nr_snp_allowed_voting >= analyze_params["snp_vote_ratio"]:
                             sample.info = max_vote[0][0]
                         else:
-                            sample.info = 'unknown'
+                            sample.info = 'UNKNOWN'
                 else:
-                    #TODO Homo-R = ADO-R
-                    sample.info = 'X'
+                    #TODO Homo-C1 = HOMO-C2
+                    sample.info = 'CONFLICT'
         else:
             if sample.AD[site.ALTS['A1']] >= analyze_params["c2_a1_limit"]:
                 sample.info = 'HET-C3'
@@ -166,5 +166,9 @@ def gt_ratio(site):
                     if sample.AD[site.ALTS['A1']] == 0:
                         sample.info = 'HOMO-C3'
                     else:
-                        sample.info = 'unknown'
-
+                        sample.info = 'UNKNOWN'
+                else:
+                    if sum(sample.AD.values()) > 0:
+                        sample.info = 'NOT-INFORMATIVE'
+                    else:
+                        sample.info = "ZERO-READS"

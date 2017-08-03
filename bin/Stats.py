@@ -163,16 +163,16 @@ class MSP(JSONSerializable):
             het2 = [RA, AR]
             
             if ms_pair is None:
-                het = ("HET", 0, 0)
+                het = ("HET-C1", 0, 0)
             else:
                 if ms_pair == 'AA':
                     het_ = (sum(het1), het1, "AA")
                 elif ms_pair == 'AR':
                     het_ = (sum(het2), het2, "AR")
                     
-                het = ("HET", sum(het_[1]), ratio(het_[1][0], het_[1][1]), het_[2])
+                het = ("HET-C1", sum(het_[1]), ratio(het_[1][0], het_[1][1]), het_[2])
 
-            homo_R = ("HOMO-R", (RR+RA), ratio(RR,RA))
+            homo_R = ("HOMO-C1", (RR+RA), ratio(RR,RA))
             homo_A1 = ("HOMO-A1", (AR+AA), ratio(AR,AA))
             self.stats = "H0:{homo_R}/{homo_R_ratio}, H:{het}/{het_ratio}, A1:{homo_A1}/{homo_A1_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2), het=round(het[1],2), het_ratio=round(het[2],2), homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
             
