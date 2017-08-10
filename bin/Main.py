@@ -52,7 +52,7 @@ if __name__ == '__main__':
                     nr_conflicting = 0
                     nr_a1 = 0
                     for sample in site.samples.values():
-                        if sample.info == 'X':
+                        if sample.info == 'CONFLICT':
                             nr_conflicting += 1
                         elif (sample.info == 'HET-C1' or sample.info == 'HET-C2' or sample.info == 'HOMO-A1'):
                             nr_a1 += 1
