@@ -124,6 +124,8 @@ class HTML(object):
             cell_name_type = "name"
             if site.samples[sample_name].info == "CONFLICT":
                 cell_name_type = "conflict"
+            elif site.samples[sample_name].info == "C3-CONFLICT":
+                cell_name_type = "c3-conflict"
             elif site.samples[sample_name].info == "HOMO-C1" or site.samples[sample_name].info == "HOMO-C2" or site.samples[sample_name].info == "HOMO-C3":
                 cell_name_type = "0"
             elif site.samples[sample_name].info == "HET-C1" or site.samples[sample_name].info == "HET-C2" or site.samples[sample_name].info == "HET-C3":

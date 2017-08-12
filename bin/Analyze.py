@@ -153,22 +153,26 @@ def gt_ratio(site):
                     #TODO Homo-C1 = HOMO-C2
                     sample.info = 'CONFLICT'
         else:
-            if sample.AD[site.ALTS['A1']] >= analyze_params["c2_a1_limit"]:
+            support_unmutated = 0
+            for snp_pos in sample.MSP.keys():    
+                msp = sample.MSP[snp_pos]
+                ms_pair = ms_pairs[snp_pos]
+                if (ms_pair == 'AA' and msp.RA >= analyze_params["c3_homo_limit"]) or (ms_pair == 'AR' and msp.RR >= analyze_params["c3_homo_limit"]):
+                    support_unmutated += 1
+            if support_unmutated > 0:
+                if sample.AD[site.ALTS['A1']] == 0:
+                    sample.info = 'HOMO-C3'
+                elif sample.AD[site.ALTS['A1']] >= analyze_params["c3_a1_limit"]:
+                    sample.info = 'C3-CONFLICT'
+                else:
+                    sample.info = 'UNKNOWN'
+            elif sample.AD[site.ALTS['A1']] >= analyze_params["c3_a1_limit"]:
                 sample.info = 'HET-C3'
             else:
-                found = 0
-                for snp_pos in sample.MSP.keys():    
-                    msp = sample.MSP[snp_pos]
-                    ms_pair = ms_pairs[snp_pos]
-                    if (ms_pair == 'AA' and msp.RA >= analyze_params["c2_homo_limit"]) or (ms_pair == 'AR' and msp.RR >= analyze_params["c2_homo_limit"]):
-                        found += 1 
-                if found > 0:
-                    if sample.AD[site.ALTS['A1']] == 0:
-                        sample.info = 'HOMO-C3'
-                    else:
-                        sample.info = 'UNKNOWN'
+                if sum(sample.AD.values()) > 0:
+                    sample.info = 'NOT-INFORMATIVE'
                 else:
-                    if sum(sample.AD.values()) > 0:
-                        sample.info = 'NOT-INFORMATIVE'
-                    else:
-                        sample.info = "ZERO-READS"
+                    sample.info = 'ZERO-READS'
+
+    
+            
