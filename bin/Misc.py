@@ -7,7 +7,6 @@ import argparse
 import os
 
 acceptable_bases = {'A','C','G','T'}
-
 def check_duplicate_region(sites):
     
     filtered_sites = list()

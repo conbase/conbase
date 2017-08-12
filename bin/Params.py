@@ -15,7 +15,6 @@ stats_params = {
 # Bulk
 "bulk_ref_limit" : 0.91,  #this requires the remaining percent to be only a1 
 }
-
 ############### Analyze #################
 analyze_params = {
 "dp_ms_limit" : 10,
@@ -26,8 +25,8 @@ analyze_params = {
 "msp_internal_ratio" : 0.05,
 "msp_c2_external_error_ratio" : 0.1, # 1-msp_ratio 
 
-"c2_a1_limit" : 1,
-"c2_homo_limit" : 1,
+"c3_a1_limit" : 3,
+"c3_homo_limit" : 3,
 
 "homo_error_allowed" : 0.09,
 
@@ -38,6 +37,7 @@ analyze_params = {
 "vote_ms_ratio_limit" : 0.9,
 
 "conflicting_upper_limit" : 20,
+"c3_conflicting_upper_limit" : 0,
 "a1_lower_limit" : 2,
 "bulk_dp_interval" : (15,45), # Must have the following format (min, max)
 }

@@ -358,7 +358,6 @@ def count_MS(site, snp, site_base, snp_base, sample_name):
             site.samples[sample_name].MSP[snp.POS].AA += 1
     ## todo: count A2, A3...
 
-
 def bulk_stats(site, bulk_bam):
     sample_reads = dict()
 
