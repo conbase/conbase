@@ -75,7 +75,7 @@ if __name__ == '__main__':
         html.close()
         tsv.close()
 
-        table_plot = File_Output.TABLE_PLOT(output_name + ".pdf", samples_names, my_sites, a1_param=True, border_color='#EEEEEE') # border_color='none'
+        table_plot = File_Output.TABLE_PLOT(output_name + ".pdf", samples_names, my_sites, a1_param=True, border_color='none') # border_color='none'
         
         
         print('Done! ' + output_name + '.html')
