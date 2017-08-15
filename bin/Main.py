@@ -63,9 +63,13 @@ if __name__ == '__main__':
                     if nr_a1 >= analyze_params["a1_lower_limit"] and nr_conflicting <= analyze_params["conflicting_upper_limit"] and nr_c3_conflicting <= analyze_params["c3_conflicting_upper_limit"]:
                         print(site.CHROM + ':' + str(site.real_POS()))
                         my_sites.append(site)
-            
+        
         my_sites.sort(key= lambda o: (int(o.CHROM), int(o.POS)))
         my_sites = Misc.check_duplicate_region(my_sites)
+        my_sites = Misc.filter_by_trees(my_sites)
+
+
+
         for site in my_sites:
             html.write_site(site)
             tsv.write_site(site)

@@ -51,3 +51,17 @@ misc_params = {
 "snp_dist_limit" : 1000,
 }
 
+trees = {
+    'tree1':{
+        'samples':['fibroblast_1','fibroblast_2','fibroblast_3','fibroblast_5','fibroblast_6'],
+        'params': { 'HET': 0, 'HOM': 1}
+    },
+    'tree2':{
+        'samples':['fibroblast_22','fibroblast_24','fibroblast_27','fibroblast_30','fibroblast_33','fibroblast_34','fibroblast_36','fibroblast_38','fibroblast_39','fibroblast_40','fibroblast_41'],
+        'params': { 'HET': 0, 'HOM': 1}
+    },
+    'all':{
+        'samples':['fibroblast_1','fibroblast_2','fibroblast_3','fibroblast_5','fibroblast_6','fibroblast_22','fibroblast_24','fibroblast_27','fibroblast_30','fibroblast_33','fibroblast_34','fibroblast_36','fibroblast_38','fibroblast_39','fibroblast_40','fibroblast_41'],
+        'params': { 'HET': 0, 'HOM': 2}
+    }
+}

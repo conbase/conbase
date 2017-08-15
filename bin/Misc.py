@@ -1,12 +1,29 @@
 import csv
 import Stats
-from Params import misc_params, stats_params
+from Params import misc_params, stats_params, trees
 import pysam
 import multiprocessing as mp
 import argparse
 import os
 
 acceptable_bases = {'A','C','G','T'}
+
+def filter_by_trees(sites):
+    filtered_sites = list()
+    for site in sites:
+        genotype_dict = {tree:{'HET':0, 'HOM':0} for tree in trees.keys()}
+        for tree_name, tree in trees.items():
+            for sample in tree['samples']:
+                gt = site.samples[sample].info[:3]
+                if gt in genotype_dict[tree_name].keys():
+                    genotype_dict[tree_name][gt] += 1
+        valid_row = True
+        for tree_name, tree in trees.items():
+            valid_row = valid_row and tree['params']['HET'] <= genotype_dict[tree_name]['HET'] and tree['params']['HOM'] <= genotype_dict[tree_name]['HOM']
+        if valid_row:  
+            filtered_sites.append(site)
+    return filtered_sites
+
 def check_duplicate_region(sites):
     
     filtered_sites = list()
