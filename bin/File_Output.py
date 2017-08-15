@@ -57,7 +57,7 @@ class TABLE_PLOT(object):
         
         if self.a1_param:
             bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
-            bulk_a1_ratio_str = "0"
+            bulk_a1_ratio_str = ""
             if bulk_a1_ratio > 0:
                 bulk_a1_ratio_str = '{0:.1f}'.format(bulk_a1_ratio*100)
             self.tb.add_cell(self.row, 1, self.width*2, self.height, text=bulk_a1_ratio_str, loc='center', edgecolor=self.border_color, facecolor="#065D4E")
