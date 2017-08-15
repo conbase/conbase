@@ -54,14 +54,14 @@ misc_params = {
 trees = {
     'tree1':{
         'samples':['fibroblast_1','fibroblast_2','fibroblast_3','fibroblast_5','fibroblast_6'],
-        'params': { 'HET': 0, 'HOM': 1}
+        'params': { 'MIN_HET': 0, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
     },
     'tree2':{
         'samples':['fibroblast_22','fibroblast_24','fibroblast_27','fibroblast_30','fibroblast_33','fibroblast_34','fibroblast_36','fibroblast_38','fibroblast_39','fibroblast_40','fibroblast_41'],
-        'params': { 'HET': 0, 'HOM': 1}
+        'params': { 'MIN_HET': 0, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
     },
     'all':{
         'samples':['fibroblast_1','fibroblast_2','fibroblast_3','fibroblast_5','fibroblast_6','fibroblast_22','fibroblast_24','fibroblast_27','fibroblast_30','fibroblast_33','fibroblast_34','fibroblast_36','fibroblast_38','fibroblast_39','fibroblast_40','fibroblast_41'],
-        'params': { 'HET': 0, 'HOM': 2}
+        'params': { 'MIN_HET': 0, 'MIN_HOM': 2, 'MAX_HET': 100, 'MAX_HOM': 100}
     }
 }

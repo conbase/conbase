@@ -19,7 +19,7 @@ def filter_by_trees(sites):
                     genotype_dict[tree_name][gt] += 1
         valid_row = True
         for tree_name, tree in trees.items():
-            valid_row = valid_row and tree['params']['HET'] <= genotype_dict[tree_name]['HET'] and tree['params']['HOM'] <= genotype_dict[tree_name]['HOM']
+            valid_row = valid_row and tree['params']['MIN_HET'] <= genotype_dict[tree_name]['HET'] and tree['params']['MIN_HOM'] <= genotype_dict[tree_name]['HOM']and tree['params']['MAX_HET'] >= genotype_dict[tree_name]['HET'] and tree['params']['MAX_HOM'] >= genotype_dict[tree_name]['HOM']
         if valid_row:  
             filtered_sites.append(site)
     return filtered_sites

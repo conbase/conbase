@@ -65,10 +65,9 @@ if __name__ == '__main__':
                         my_sites.append(site)
         
         my_sites.sort(key= lambda o: (int(o.CHROM), int(o.POS)))
+        
         my_sites = Misc.check_duplicate_region(my_sites)
         my_sites = Misc.filter_by_trees(my_sites)
-
-
 
         for site in my_sites:
             html.write_site(site)
