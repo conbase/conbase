@@ -4,12 +4,14 @@ STYLE_PATH = main_directory + '/Style.css'
 SCRIPT_PATH = main_directory + '/Script.js'
 
 class TABLE_PLOT(object):
-    def __init__(self, path, sample_names, sites=[], bbox=[0,0,0.5,1]):    
+    def __init__(self, path, sample_names, sites=[], bbox=[0,0,0.5,1], a1_param=False, border_color='black'):    
         self.path = path
         self.sample_names = sample_names
         self.row = 0
         self.width = 0.1
         self.height = 0.1
+        self.a1_param = a1_param
+        self.border_color = border_color
         if sites == []:
             self.plt, self.ax, self.tb = self.open(bbox)
         else:
@@ -35,29 +37,46 @@ class TABLE_PLOT(object):
         ax.set_axis_off()
         tb = Table(ax, bbox=bbox)
         tb.add_cell(self.row, 0, self.width*2, self.height, text="", loc='center', edgecolor='none', facecolor='none')
+        if self.a1_param:
+            tb.add_cell(self.row, 1, self.width*2, self.height, text="A1", loc='center', edgecolor='none', facecolor='none')
 
         for col, sample in enumerate(self.sample_names):
-            tb.add_cell(self.row, col+1, self.width, self.height, text=str(col+1), loc='center', edgecolor='none', facecolor='none')
+            col_ = col+1
+            if self.a1_param:
+                col_ = col+2
+
+            tb.add_cell(self.row, col_, self.width, self.height, text=str(col+1), loc='center', edgecolor='none', facecolor='none')
         self.row += 1
         return plt, ax, tb
 
     def write_site(self, site):
-        chrom_pos_str = site.CHROM + ":" + str(site.real_POS())
-        self.tb.add_cell(self.row, 0, self.width*2, self.height, text=chrom_pos_str, loc='right', edgecolor='none', facecolor='none')
-        
         color_dict = {"HET-C1":"#7D0839", "HET-C2":"#B54373" ,"HET-C3":"#EBA5C3" ,"HOMO-C1": "#065D4E" ,"HOMO-C2":"#0FA38A" ,"HOMO-C3":"#87E1D2" , "HOMO-A1":"#B26321", "NOT-INFORMATIVE":"#BBBBBB","CONFLICT":"#000000", "UNKNOWN":"#424242"}
+
+        chrom_pos_str = site.CHROM + ":" + str(site.real_POS())
+        self.tb.add_cell(self.row, 0, self.width*2, self.height, text=chrom_pos_str, loc='right', edgecolor='none', facecolor='none')        
+        
+        if self.a1_param:
+            bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
+            bulk_a1_ratio_str = "0%"
+            if bulk_a1_ratio > 0:
+                bulk_a1_ratio_str = '{0:.1f}%'.format(bulk_a1_ratio*100)
+            self.tb.add_cell(self.row, 1, self.width*2, self.height, text=bulk_a1_ratio_str, loc='center', edgecolor=self.border_color, facecolor="#c3eec4")
+            
         for col, sample_name in enumerate(self.sample_names):
             color = "white"
             if site.samples[sample_name].info in color_dict.keys():
                 color = color_dict[site.samples[sample_name].info]
-            self.tb.add_cell(self.row, col+1, self.width, self.height, text="", loc='center', facecolor=color)
+            col_ = col+1
+            if self.a1_param:
+                col_ = col+2
+            self.tb.add_cell(self.row, col_, self.width, self.height, text="", loc='center', edgecolor=self.border_color, facecolor=color)
         self.row += 1
 
     def close(self):
         table_props = self.tb.properties()
         table_cells = table_props['child_artists']
         for cell in table_cells: 
-            cell._text.set_fontsize(4)
+            cell._text.set_fontsize(3)
         self.ax.add_table(self.tb)
         self.plt.savefig(self.path, dpi=2000)    
 
