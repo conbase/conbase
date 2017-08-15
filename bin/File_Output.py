@@ -69,7 +69,7 @@ class TSV(object):
 
     def open(self):
         writer = open(self.path,'w')
-        writer.write("CHROM\tPOS\tBULK-DP:A1-RATIO\t")
+        writer.write("CHROM\tPOS\tREF\tALT\tBULK-DP:A1-RATIO\t")
         for sample_name in self.sample_names:
             writer.write(sample_name + ":DP" + "\t")
         writer.write("\n")
@@ -80,7 +80,7 @@ class TSV(object):
         bulk_a1_ratio_str = ""
         if bulk_a1_ratio > 0:
             bulk_a1_ratio_str = '{0:.2f}'.format(bulk_a1_ratio)
-        self.writer.write(site.CHROM + "\t" + str(site.real_POS()) + "\t" + str(site.BULK_INFO['SUM']) + ':' + bulk_a1_ratio_str + "\t" )
+        self.writer.write(site.CHROM + "\t" + str(site.real_POS()) + "\t" + str(site.REF) + '\t' + str(site.ALTS['A1']) + "\t" + str(site.BULK_INFO['SUM']) + ':' + bulk_a1_ratio_str + "\t" )
         for sample_name in self.sample_names:
             self.writer.write(site.samples[sample_name].info + ":" + str(sum(site.samples[sample_name].AD.values())) + "\t")
         self.writer.write("\n")
