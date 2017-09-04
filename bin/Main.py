@@ -32,6 +32,7 @@ if __name__ == '__main__':
         print("Done!" + '../results/' + output_file_name + ".json" )
 
     if args.analyze is not None:
+        print('run...')
         json_path = args.analyze[0]
         # main_directory = os.path.dirname(os.path.realpath(__file__)) 
         output_name =  '../results/' + args.analyze[1]
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         my_sites.sort(key= lambda o: (int(o.CHROM), int(o.POS)))
         
         my_sites = Misc.check_duplicate_region(my_sites)
-        my_sites = Misc.filter_by_trees(my_sites)
+        my_sites = Misc.trees_stats(my_sites, output_name)
 
         for site in my_sites:
             html.write_site(site)

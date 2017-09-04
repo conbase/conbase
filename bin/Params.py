@@ -17,7 +17,7 @@ stats_params = {
 }
 ############### Analyze #################
 analyze_params = {
-"dp_ms_limit" : 8,
+"dp_ms_limit" : 70,
 "snp_total_vote" : 0.9,
 "snp_vote_ratio" : 0.9,
 
@@ -33,35 +33,54 @@ analyze_params = {
 "ms_group_ratio" : 0.01,
 "win_internal_group_ratio" : 0.1,
 
-"sample_ms_vote_limit" : 3,
+"sample_ms_vote_limit" : 2,
 "vote_ms_ratio_limit" : 0.9,
 
 "conflicting_upper_limit" : 0,
 "c3_conflicting_upper_limit" : 0,
 "a1_lower_limit" : 2,
-"bulk_dp_interval" : (15,45), # Must have the following format (min, max)
+"bulk_dp_interval" : (15,55), # Must have the following format (min, max)
 }
 
 ################ Misc ##################
 misc_params = {
-"mut_nr_limit" : 1000,
+"mut_nr_limit" : 1,
 "mut_dist_limit" : 1000,
 
-"snp_nr_limit" : 50,
+"snp_nr_limit" : 10,
 "snp_dist_limit" : 1000,
 }
 
-trees = {
+
+
+#trees = {   
+#    'tree1':{
+#        'samples':["fibroblast_22", "fibroblast_24", "fibroblast_27", "fibroblast_30", "fibroblast_33", "fibroblast_34", "fibroblast_36", "fibroblast_38", "fibroblast_39", "fibroblast_40", "fibroblast_41"],
+#        'params': { 'MIN_HET': 1, 'MIN_HOM': 0, 'MAX_HET': 100, 'MAX_HOM': 100}
+#    },
+#    'tree2':{
+#        'samples':["fibroblast_1", "fibroblast_2", "fibroblast_3", "fibroblast_4", "fibroblast_5", "fibroblast_6"],
+#        'params': { 'MIN_HET': 1, 'MIN_HOM': 0, 'MAX_HET': 100, 'MAX_HOM': 100}
+#    },
+#    'all':{
+#        'samples':["fibroblast_22", "fibroblast_24", "fibroblast_27", "fibroblast_30", "fibroblast_33", "fibroblast_34", "fibroblast_36", "fibroblast_38", "fibroblast_39", "fibroblast_40", "fibroblast_41", "fibroblast_1", "fibroblast_2", "fibroblast_3", "fibroblast_4", "fibroblast_5", "fibroblast_6"],
+#        'params': { 'MIN_HET': 2, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
+#    }
+#}
+
+trees = {   
     'tree1':{
-        'samples':['fibroblast_1','fibroblast_2','fibroblast_3','fibroblast_5','fibroblast_6'],
-        'params': { 'MIN_HET': 0, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
+        'samples':['110','111','112','113','114','118','119','120','121'],
+        'params': { 'MIN_HET': 1, 'MIN_HOM': 0, 'MAX_HET': 100, 'MAX_HOM': 100}
     },
     'tree2':{
-        'samples':['fibroblast_22','fibroblast_24','fibroblast_27','fibroblast_30','fibroblast_33','fibroblast_34','fibroblast_36','fibroblast_38','fibroblast_39','fibroblast_40','fibroblast_41'],
-        'params': { 'MIN_HET': 0, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
+        'samples':['134','135','136','137','138','142','143','144','145'],
+        'params': { 'MIN_HET': 1, 'MIN_HOM': 0, 'MAX_HET': 100, 'MAX_HOM': 100}
     },
     'all':{
-        'samples':['fibroblast_1','fibroblast_2','fibroblast_3','fibroblast_5','fibroblast_6','fibroblast_22','fibroblast_24','fibroblast_27','fibroblast_30','fibroblast_33','fibroblast_34','fibroblast_36','fibroblast_38','fibroblast_39','fibroblast_40','fibroblast_41'],
-        'params': { 'MIN_HET': 0, 'MIN_HOM': 2, 'MAX_HET': 100, 'MAX_HOM': 100}
+        'samples':['110','111','112','113','114','118','119','120','121','134','135','136','137','138','142','143','144','145'],
+        'params': { 'MIN_HET': 2, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
     }
 }
+
+

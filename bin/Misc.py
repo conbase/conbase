@@ -24,6 +24,27 @@ def filter_by_trees(sites):
             filtered_sites.append(site)
     return filtered_sites
 
+def trees_stats(sites,output):
+    filtered_sites = list()
+    for site in sites:
+        genotype_dict = {tree:{'HET':0, 'HOM':0} for tree in trees.keys()}
+        for tree_name, tree in trees.items():
+            for sample in tree['samples']:
+                gt = site.samples[sample].info[:3]
+                if gt in genotype_dict[tree_name].keys():
+                    genotype_dict[tree_name][gt] += 1
+        valid_row = True
+        for tree_name, tree in trees.items():
+            valid_row = valid_row and tree['params']['MIN_HOM'] <= genotype_dict[tree_name]['HOM']
+        if valid_row:
+            filtered_sites.append(site)
+    filtered_sites_2 = filter_by_trees(filtered_sites) 
+    f = open(output+'_trees_stats.txt','w')
+    f.write("Percentage of positions with at least one green: " + str(float(len(filtered_sites))/len(sites))+"\n")
+    f.write("Percentage of positions with impossible genotype distributions: " + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n")
+    return filtered_sites
+
+
 def check_duplicate_region(sites):
     
     filtered_sites = list()
