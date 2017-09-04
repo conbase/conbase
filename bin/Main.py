@@ -1,5 +1,5 @@
 import Stats, Analyze, File_Output
-from Params import analyze_params, misc_params
+from Params import analyze_params, misc_params, stats_params
 import argparse, json
 import Misc
 
@@ -7,19 +7,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run conbase')
     parser.add_argument('--stats', nargs=5, metavar=("<snp path>", "<bam path>", "<reference path>", "<number of nodes>", "<output name>"))
     parser.add_argument('--analyze', nargs=2, metavar=("<json path>", "<output name>"))
-    parser.add_argument('--params', nargs=1, metavar=("<params path>"))
+    parser.add_argument('--params_stats', nargs=1, metavar=("<params dict>"))
+    parser.add_argument('--params_analyze', nargs=1, metavar=("<params dict>"))
+
     args = parser.parse_args()
 
-    if args.params is not None:
-        f = open(args.params[0], 'r')
-        lines = f.read().splitlines()
-        for line in lines:
-            attribute, _, value_str =  line.split()
-            try:
-                value = int(value_str)
-            except ValueError:
-                value = float(value_str)
-            setattr(params, attribute, value)
+    if args.params_analyze is not None:
+        analyze_params.update(eval(args.params_analyze[0]))
+        
+    if args.params_stats is not None:
+        stats_params.update(eval(args.params_stats[0]))
 
     if args.stats is not None:
         snps_path = args.stats[0]
@@ -32,6 +29,7 @@ if __name__ == '__main__':
         print("Done!" + '../results/' + output_file_name + ".json" )
 
     if args.analyze is not None:
+        print(analyze_params)
         print('run...')
         json_path = args.analyze[0]
         # main_directory = os.path.dirname(os.path.realpath(__file__)) 
