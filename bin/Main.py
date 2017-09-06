@@ -29,7 +29,6 @@ if __name__ == '__main__':
         print("Done!" + '../results/' + output_file_name + ".json" )
 
     if args.analyze is not None:
-        print(analyze_params)
         print('run...')
         json_path = args.analyze[0]
         # main_directory = os.path.dirname(os.path.realpath(__file__)) 

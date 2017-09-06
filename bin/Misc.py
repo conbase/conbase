@@ -1,6 +1,6 @@
 import csv
 import Stats
-from Params import misc_params, stats_params, trees
+from Params import misc_params, stats_params, trees, analyze_params
 import pysam
 import multiprocessing as mp
 import argparse
@@ -40,8 +40,9 @@ def trees_stats(sites,output):
             filtered_sites.append(site)
     filtered_sites_2 = filter_by_trees(filtered_sites) 
     f = open(output+'_trees_stats.txt','w')
-    f.write("Percentage of positions with at least one green: " + str(float(len(filtered_sites))/len(sites))+"\n")
-    f.write("Percentage of positions with impossible genotype distributions: " + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n")
+    # f.write("Percentage of positions with at least one green: " + str(float(len(filtered_sites))/len(sites))+"\n")
+    # f.write("Percentage of positions with impossible genotype distributions: " + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n")
+    f.write(str(analyze_params['dp_ms_limit']) + '\t' + str(analyze_params['msp_internal_ratio']) + '\t' + str(analyze_params['msp_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
     return filtered_sites
 
 
