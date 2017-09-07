@@ -1,18 +1,17 @@
 import os
 import multiprocessing as mp
 import argparse
-
+import numpy as np
+from numpy import genfromtxt
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Experiment')
-    parser.add_argument('--run', nargs=0, metavar=(""))
-    parser.add_argument('--plot', nargs=1, metavar=("<txt path>"))
+    parser.add_argument('-r', '--run', action='store_true')
+    parser.add_argument('-p', '--plot', nargs=1, metavar=("<txt path>"))
     args = parser.parse_args()
 
-    if args.run is not None:
-        analyze_params.update(eval(args.params_analyze[0]))
-
+    if args.run:
         tcell_path = '/media/box2/Experiments/Marez/conbase/results/female_final.json'
         fibs_path = '/media/box2/Experiments/Marez/conbase/results/fibs/fibs_29juli_wo4243.json'
         test_path = '/Users/ezeddin/Projects/work/conbase_ki/results/test_marez_params.json'
@@ -31,6 +30,9 @@ if __name__ == '__main__':
         dp_range = [5, 10, 15, 20, 30, 40, 70]
         internal_ratio_range = [0.1, 0.2, 0.3, 0.4]
         external_ratio_range = [0.3, 0.5, 0.7, 0.8, 0.9]
+        # dp_range = [5, 10, 15]
+        # internal_ratio_range = [0.1, 0.2]
+        # external_ratio_range = [0.3, 0.5]
         dataset_name = 'fibs'
 
         jobs = []
@@ -61,4 +63,24 @@ if __name__ == '__main__':
                     os.system('rm ' + file_path)
     
     if args.plot is not None:
-        pass
+        data = genfromtxt(args.plot[0], delimiter='\t')
+        filter_1 = data[:,3]
+        filter_2 = data[:,4]
+
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        line = ax.scatter(data[:,0], data[:,1], data[:,2], c=filter_1)
+        cb = plt.colorbar(line, label='impossible gt dist')
+        ax.set_xlabel('dp limit')
+        ax.set_ylabel('ms internal')
+        ax.set_zlabel('ms external')
+
+        def forceUpdate(event):
+            global line
+            line.changed()
+
+        fig.canvas.mpl_connect('draw_event', forceUpdate)
+        plt.show()
