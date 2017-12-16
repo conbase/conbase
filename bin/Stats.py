@@ -315,7 +315,7 @@ def define_altenative(site):
 
         site.ALTS = {'A1': None, 'A2': None, 'A3':None}
 
-        if vote_ratio >= stats_params["vote_ratio_limit"] and len(max_vote_allele) >= stats_params["sample_vote_limit"]:
+        if vote_ratio >= stats_params["vote_ratio_limit"] and sum_votes >= stats_params["sample_vote_limit"]:
             i = 1
             for b in max_vote_allele:
                 if b[1] != 0:
