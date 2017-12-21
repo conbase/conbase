@@ -166,19 +166,25 @@ class HTML(object):
             for snp_pos, msp in msp_list:
                 if msp.get_ms_total() > 0:
                     if msp.voted != '':
+                        self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) +  '</td>\n')
+                        self.source_code.append('<td colspan=2>tuple: ' + str(site.snp_ms_win[snp_pos]) + '</td></tr>\n')
                         if msp.voted == 'UNKNOWN':
-                            self.source_code.append('<tr><td class="voted_unknown" colspan=5>SNP: ' + str(snp_pos+1) + ' (ms: ' + str(site.snp_ms_win[snp_pos]) + ', voted: ' + msp.voted + ')</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted_unknown" colspan=5> voted: ' + msp.voted + '</td></tr>\n')
                         else:
-                            self.source_code.append('<tr><td class="voted" colspan=5>SNP: ' + str(snp_pos+1) + ' (ms: ' + str(site.snp_ms_win[snp_pos]) + ', voted: ' + msp.voted + ')</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted" colspan=5> voted: ' + msp.voted + '</td></tr>\n')
                     else:
-                        self.source_code.append('<tr><td colspan=5>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
+                        self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
 
-                    self.source_code.append('<tr><td colspan=2>GT distribution</td>\n')
+#                    self.source_code.append('<tr><td colspan=2>GT distribution</td>\n')
 
-                    self.source_code.append('<td>' + str(msp.homo_R) + '</td>\n')
-                    self.source_code.append('<td>' + str(msp.het) + '</td>\n')
-                    self.source_code.append('<td>' + str(msp.homo_A1) + '</td></tr>\n')
-                    self.source_code.append('<tr><td>MSP</td>\n')
+#                    self.source_code.append('<td>' + str(msp.homo_R) + '</td>\n')
+#                    self.source_code.append('<td>' + str(msp.het) + '</td>\n')
+#                    self.source_code.append('<td>' + str(msp.homo_A1) + '</td></tr>\n')
+#
+#                    self.source_code.append('<td>' + str(msp.homo_R) + '</td>\n')
+#                    self.source_code.append('<td>' + str(msp.het) + '</td>\n')
+#                    self.source_code.append('<td>' + str(msp.homo_A1) + '</td></tr>\n')
+                    self.source_code.append('<tr>\n')
                     self.source_code.append('<td> RR: ' + str(msp.RR) + '</td>\n')
                     self.source_code.append('<td> RA: ' + str(msp.RA) + '</td>\n')
                     self.source_code.append('<td> AR: ' + str(msp.AR) + '</td>\n')
