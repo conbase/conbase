@@ -16,9 +16,9 @@ if __name__ == '__main__':
         def get_key(dp, internal_ratio, external_ratio, dataset):
             return dataset + str(dp) + str(internal_ratio) + str(external_ratio)
 
-        # bash_code = 'source activate snowflake; python Main.py --analyze {link} {output_name} --params_analyze {param_dict}'.format(link=test_path, output_name='fibs_29juli_wo4243_dp_5', param_dict='\'"dp_ms_limit":{dp}, "msp_ratio":{ratio}\''.format{dp=5,ratio=0.8})
+        # bash_code = 'source activate snowflake; python Main.py --analyze {link} {output_name} --params_analyze {param_dict}'.format(link=test_path, output_name='fibs_29juli_wo4243_dp_5', param_dict='\'"dp_ms_limit":{dp}, "tuples_ratio":{ratio}\''.format{dp=5,ratio=0.8})
         def run_bash_code(json_path, dp, internal_ratio, external_ratio, dataset, queue):
-            param_dict = '"dp_ms_limit":{dp}, "msp_internal_ratio":{internal_ratio}, "msp_ratio":{external_ratio}'.format(dp=dp,internal_ratio=internal_ratio, external_ratio=external_ratio)
+            param_dict = '"dp_ms_limit":{dp}, "tuples_internal_ratio":{internal_ratio}, "tuples_ratio":{external_ratio}'.format(dp=dp,internal_ratio=internal_ratio, external_ratio=external_ratio)
             param_dict = '\'{' + param_dict + '}\''
             bash_code = 'python Main.py --analyze {path} {output_name} --params_analyze {param_dict}'.format(path=json_path, output_name=get_key(dp, internal_ratio, external_ratio, dataset), param_dict=param_dict)
             os.system(bash_code)

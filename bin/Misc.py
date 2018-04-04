@@ -42,7 +42,7 @@ def trees_stats(sites,output):
     f = open(output+'_trees_stats.txt','w')
     # f.write("Percentage of positions with at least one green: " + str(float(len(filtered_sites))/len(sites))+"\n")
     # f.write("Percentage of positions with impossible genotype distributions: " + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n")
-    f.write(str(analyze_params['dp_ms_limit']) + '\t' + str(analyze_params['msp_internal_ratio']) + '\t' + str(analyze_params['msp_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
+    f.write(str(analyze_params['dp_ms_limit']) + '\t' + str(analyze_params['tuples_internal_ratio']) + '\t' + str(analyze_params['tuples_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
     return filtered_sites
 
 
@@ -75,7 +75,7 @@ def check_duplicate_region(sites):
                     if not in_duplicate_region:
                         filtered_sites.append(site)
                     else:
-                        print('removed site! position:', site.CHROM, site.real_POS())
+                        print('removed site! position:', site.CHROM, site.true_pos)
             else:
                 filtered_sites += chrom_sites
     else:

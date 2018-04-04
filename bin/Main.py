@@ -44,8 +44,8 @@ if __name__ == '__main__':
         my_sites = []
         for site in sites:
             Analyze.gt_ratio(site)
-            if site.TYPE == '' and len(site.BULK_INFO) > 0 and site.BULK_INFO['SUM'] >= analyze_params["bulk_dp_interval"][0] and site.BULK_INFO['SUM'] <= analyze_params["bulk_dp_interval"][1]:
-                bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
+            if site.TYPE == '' and len(site.bulk) > 0 and site.bulk['SUM'] >= analyze_params["bulk_dp_interval"][0] and site.bulk['SUM'] <= analyze_params["bulk_dp_interval"][1]:
+                bulk_a1_ratio = float(site.bulk[site.ALTS['A1']])/site.bulk['SUM']
                 if bulk_a1_ratio <= (1 - stats_params_in_json["bulk_ref_limit"]):
                     nr_conflicting = 0
                     nr_c3_conflicting = 0
@@ -59,10 +59,10 @@ if __name__ == '__main__':
                             nr_a1 += 1
 
                     if nr_a1 >= analyze_params["a1_lower_limit"] and nr_conflicting <= analyze_params["conflicting_upper_limit"] and nr_c3_conflicting <= analyze_params["c3_conflicting_upper_limit"]:
-                        print(site.CHROM + ':' + str(site.real_POS()))
+                        print(site.chrom + ':' + str(site.true_pos))
                         my_sites.append(site)
         
-        my_sites.sort(key= lambda o: (int(o.CHROM), int(o.POS)))
+        my_sites.sort(key= lambda o: (int(o.chrom), int(o.pos)))
         
         my_sites = Misc.check_duplicate_region(my_sites)
         my_sites = Misc.trees_stats(my_sites, output_name)

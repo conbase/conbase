@@ -21,9 +21,9 @@ analyze_params = {
 "snp_total_vote" : 0.9,
 "snp_vote_ratio" : 0.9,
 
-"msp_ratio" : 0.9,
-"msp_internal_ratio" : 0.1,
-"msp_c2_external_error_ratio" : 0.1, # 1-msp_ratio 
+"tuples_ratio" : 0.9,
+"tuples_internal_ratio" : 0.1,
+"tuples_c2_external_error_ratio" : 0.1, # 1-tuples_ratio 
 
 "c3_a1_limit" : 2,
 "c3_homo_limit" : 2,

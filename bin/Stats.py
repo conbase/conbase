@@ -1,5 +1,5 @@
 import sys, csv, pysam, os
-from File_Output import *
+from File_Output import SiteToJSON
 import json
 import multiprocessing as mp
 from Params import stats_params
@@ -12,13 +12,14 @@ class JSONSerializable(object):
         return json.dumps(self.__dict__, default = lambda o: o.__dict__)
 
 class Site(JSONSerializable):
-    def __init__(self, CHROM, POS, REF, ALTS, TYPE, samples, sample_names):
-        self.CHROM = CHROM
-        self.POS = POS  #other index
-        self.REF = REF
-        self.ALTS = ALTS
-        self.BULK_INFO = dict()
-        self.TYPE = TYPE
+    def __init__(self, chrom, pos, ref, alts, kind, samples, sample_names):
+        self.chrom = chrom
+        self.pos = pos  # 0-index
+        self.true_pos = pos + 1  
+        self.ref = ref
+        self.alts = alts
+        self.bulk = dict()
+        self.kind = kind # SNP, ERROR, HOMO, ...
         self.snp_ms_win = dict()
         self.samples = samples
         if not samples:
@@ -26,76 +27,39 @@ class Site(JSONSerializable):
 
     def init_samples(self, sample_names):
         for sample_name in sample_names:
-            self.samples[sample_name] = Sample(sample_name, {'A' : 0, 'C' : 0, 'G' : 0, 'T' : 0}, dict(), None, dict(), 'None')
-
-    def real_POS(self):
-        return self.POS + 1
-
-    def get_ALTS(self):
-        alts = list(self.ALTS.keys())
-        alts.sort()
-        return ",".join([self.ALTS[alt] for alt in alts if self.ALTS[alt] != None])
-    
-    def get_bulk_info(self):
-        if len(self.BULK_INFO) == 0:
-            return ''
-            
-        bases = {'A', 'C', 'G', 'T'}
-        info_str = "DP:{DP}, ".format(DP = self.BULK_INFO['SUM'])
-        for b in bases:
-            r = round(100*self.BULK_INFO[b],3)
-            if r != 0:
-                info_str += "{base}:{ratio}, ".format(base = b, ratio = r)
-        return info_str
+            self.samples[sample_name] = Sample(sample_name, {'A' : 0, 'C' : 0, 'G' : 0, 'T' : 0}, dict(), 'None')
 
 class Sample(JSONSerializable):
-    def __init__(self, name, AD, GT, ST, MSP, info):
+    def __init__(self, name, AD, tuples, info):
         self.name       = name
         self.AD         = AD
-        self.GT         = GT
-        self.ST         = ST
         self.snp_reads  = 0
-        self.MSP        = MSP
+        self.tuples     = tuples
         self.info       = info
         self.indels     = 0
 
-    # TODO
     def get_AD(self, site):
         str_AD = ""
-        alts = [k for k, v in site.ALTS.items() if v != None and self.AD[v] > 0]
+        alts = [k for k, v in site.alts.items() if v != None and self.AD[v] > 0]
         alts.sort()
-        alts_AD = [k + ":" + str(self.AD[site.ALTS[k]]) for k in alts]
+        alts_AD = [k + ":" + str(self.AD[site.alts[k]]) for k in alts]
 
-        if self.AD[site.REF] != 0 and len(alts) != 0:
-            str_AD = 'R:{R}/{ALTS}'.format(R = self.AD[site.REF], ALTS = ",".join(alts_AD))
-        elif self.AD[site.REF] == 0 and len(alts) != 0:
-            str_AD = "./{ALTS}".format(ALTS = ",".join(alts_AD))
-        elif self.AD[site.REF] != 0 and len(alts) == 0:
-            str_AD = 'R:{R}/.'.format(R = self.AD[site.REF])
-        elif self.AD[site.REF] == 0 and len(alts) == 0:
+        if self.AD[site.ref] != 0 and len(alts) != 0:
+            str_AD = 'R:{R}/{alts}'.format(R = self.AD[site.ref], alts = ",".join(alts_AD))
+        elif self.AD[site.ref] == 0 and len(alts) != 0:
+            str_AD = "./{alts}".format(alts = ",".join(alts_AD))
+        elif self.AD[site.ref] != 0 and len(alts) == 0:
+            str_AD = 'R:{R}/.'.format(R = self.AD[site.ref])
+        elif self.AD[site.ref] == 0 and len(alts) == 0:
             str_AD = "./."
-        # else:
-        #     print("FEEEEEEEEEEELLLLLLLLLLLL")
-        
-        alts_value = [v for k, v in site.ALTS.items() if v != None and self.AD[v] > 0]
-        other = sum([v for k, v in self.AD.items() if k != site.REF and k not in alts_value and v > 0])
+
+        alts_value = [v for k, v in site.alts.items() if v != None and self.AD[v] > 0]
+        other = sum([v for k, v in self.AD.items() if k != site.ref and k not in alts_value and v > 0])
 
 
         str_AD += ", O: {other}".format(other = other)
         return str_AD
 
-    def get_GT(self):
-        str_GT = ""
-        for pos, msp in self.MSP.items():
-            str_GT += "{pos}: {msp} | ".format(pos = int(pos)+1, msp = msp.get_stats())
-        return str_GT
-
-    def get_MSP(self):
-        str_MSP = ""
-        for pos, msp in self.MSP.items():
-            str_MSP += "{pos}: RR:{RR}, RA:{RA}, AR:{AR}, AA:{AA} | ".format(pos = int(pos)+1, RR = str(msp.RR), RA = str(msp.RA), AR = str(msp.AR), AA = str(msp.AA))
-        return str_MSP
-    
 class Read(object):
     def __init__(self, id, mate, sequence, tuples, start, end, base_quality, mapping_quality, has_snp):
         self.id = id
@@ -135,7 +99,7 @@ class Read(object):
                 base_quality[p] = 0      
         return base_quality 
 
-class MSP(JSONSerializable):
+class Tuple(JSONSerializable):
     def __init__(self):
         self.RR = 0
         self.RA = 0
@@ -150,7 +114,7 @@ class MSP(JSONSerializable):
     def get_ms_total(self):
         return sum([self.RR,self.RA,self.AR,self.AA])
 
-    def get_msp_ratio(self, ms_pair):
+    def get_tuples_ratio(self, ms_pair):
         T = self.get_ms_total()
 
         if T > 0:
@@ -191,18 +155,14 @@ def get_reads(snp, bams):
     for bam_name, bam_file in bams:
         reads = list()
         mates = dict()
-        left = snp.POS-stats_params["fragment_length"]
-        right = snp.POS+stats_params["fragment_length"]
-
-        if left < 0:
-            left = 0
-#        print(bam_name)
-
-        for read in bam_file.fetch(snp.CHROM,  left, right):
+        left = max(0, snp.pos-stats_params["fragment_length"])
+        right = snp.pos+stats_params["fragment_length"]
+        # TODO try except (get_ref..)
+        for read in bam_file.fetch(snp.chrom, left, right):
             if read.mapping_quality >= stats_params["mapping_quality"] and read.is_paired and read.is_proper_pair:
                 r = Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                     read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
-                if snp.POS in r.bases.keys():
+                if snp.pos in r.bases.keys():
                     r.has_snp = True
                 try:
                     m = mates[r.id]
@@ -239,10 +199,10 @@ def get_references(chrom, start, end, ref_file):
 
 def init_site(snp, sample_names, reference, pos):
     ref = reference[pos]
-    if pos == snp.POS:
+    if pos == snp.pos:
         site = snp
     else:
-        site = Site(snp.CHROM, pos, ref, None, '', dict(), sample_names)
+        site = Site(snp.chrom, pos, ref, None, '', dict(), sample_names)
     return site
 
 # snp_limit returns min and max position for all reads belonging to a snp, otherwise none
@@ -289,16 +249,16 @@ def ratio(num1, num2):
         return 0.0
 
 def define_altenative(site):
-    if site.ALTS == None:
+    if site.alts is None:
         allele_vote = {'A' : 0, 'C' : 0, 'G' : 0, 'T' : 0}
         for sample in site.samples.values():
             lst = []
             for b in sample.AD.keys(): 
-                if b != site.REF:
-                    if ratio(sample.AD[b], sample.AD[site.REF]) >= stats_params["alt_ratio_limit"] and \
-                     (sample.AD[site.REF]+sample.AD[b]) >= stats_params["dp_limit"]:
+                if b != site.ref:
+                    if ratio(sample.AD[b], sample.AD[site.ref]) >= stats_params["alt_ratio_limit"] and \
+                     (sample.AD[site.ref]+sample.AD[b]) >= stats_params["dp_limit"]:
                         lst.append((b, sample.AD[b]))
-                    elif ratio(sample.AD[b], sample.AD[site.REF]) <= stats_params["alt_ratio_limit"] and sample.AD[b] >= stats_params["dp_limit"]:
+                    elif ratio(sample.AD[b], sample.AD[site.ref]) <= stats_params["alt_ratio_limit"] and sample.AD[b] >= stats_params["dp_limit"]:
                         lst.append((b, sample.AD[b]))
 
             if lst != []:
@@ -307,148 +267,78 @@ def define_altenative(site):
                 if len(lst) == 1 or (lst[0][1] > lst[1][1]):
                     allele_vote[lst[0][0]] += 1
 
-        max_vote_allele = sorted([b for b in allele_vote.items() if b[0] != site.REF], reverse = True, key = lambda t: t[1])
+        max_vote_allele = sorted([b for b in allele_vote.items() if b[0] != site.ref], reverse = True, key = lambda t: t[1])
         sum_votes = sum([b[1] for b in max_vote_allele])
         vote_ratio = 0
         if sum_votes > 0:
             vote_ratio = max_vote_allele[0][1]/sum_votes
 
-        site.ALTS = {'A1': None, 'A2': None, 'A3':None}
-
+        site.alts = {'A1': None, 'A2': None, 'A3':None}
         if vote_ratio >= stats_params["vote_ratio_limit"] and sum_votes >= stats_params["sample_vote_limit"]:
             i = 1
             for b in max_vote_allele:
                 if b[1] != 0:
                     alt_str = "A" + str(i)
-                    site.ALTS.update({alt_str:b[0]})
+                    site.alts.update({alt_str:b[0]})
                     i += 1
         else:
-            site.TYPE = 'UNDEF'
-        alts = [alt for alt in site.ALTS.values() if alt != None]
+            site.kind = 'UNDEF'
+        alts = [alt for alt in site.alts.values() if alt != None]
         if len(alts) == 0:
-            site.TYPE = 'HOMO'
+            site.kind = 'HOMO'
 
-def mut_snp(snp, sites, reads):
+def count_tuple(site, snp, site_base, snp_base, sample_name):
+    if snp.pos not in site.samples[sample_name].tuples.keys():
+        site.samples[sample_name].tuples[snp.pos] = Tuple()
+
+    if site_base == site.ref and snp_base == snp.ref:
+            site.samples[sample_name].tuples[snp.pos].RR += 1
+    elif site_base == site.ref and snp_base == snp.alts['A1']:
+            site.samples[sample_name].tuples[snp.pos].RA += 1
+    elif site_base == site.alts['A1'] and snp_base == snp.ref:
+            site.samples[sample_name].tuples[snp.pos].AR += 1
+    elif site_base == site.alts['A1'] and snp_base == snp.alts['A1']:
+            site.samples[sample_name].tuples[snp.pos].AA += 1
+
+def tuple_counter(snp, sites, reads):
     for sample_name, sample_reads in reads.items():
         for read in sample_reads:
             if read.has_snp:
                 snp_read = read
-                if snp.POS not in snp_read.bases.keys():
+                if snp.pos not in snp_read.bases.keys():
                     snp_read = read.mate
-                    if snp.POS not in snp_read.bases.keys():
+                    if snp.pos not in snp_read.bases.keys():
                         print(snp_read.id)
-                        print("Base not in snp mate pos", snp.POS)
+                        print("Base not in snp mate pos", snp.pos)
 
                 for pos in read.bases.keys():
-                    if pos in sites.keys() and sites[pos].TYPE != 'SNP' and read.base_quality[pos] >= stats_params["base_quality"]:
-                        count_MS(sites[pos], snp, read.bases[pos], snp_read.bases[snp.POS], sample_name)
-
-
-def count_MS(site, snp, site_base, snp_base, sample_name):
-    if snp.POS not in site.samples[sample_name].MSP.keys():
-        site.samples[sample_name].MSP[snp.POS] = MSP()
-
-    if site_base == site.REF and snp_base == snp.REF:
-            site.samples[sample_name].MSP[snp.POS].RR += 1
-    elif site_base == site.REF and snp_base == snp.ALTS['A1']:
-            site.samples[sample_name].MSP[snp.POS].RA += 1
-    elif site_base == site.ALTS['A1'] and snp_base == snp.REF:
-            site.samples[sample_name].MSP[snp.POS].AR += 1
-    elif site_base == site.ALTS['A1'] and snp_base == snp.ALTS['A1']:
-            site.samples[sample_name].MSP[snp.POS].AA += 1
-    ## todo: count A2, A3...
+                    if pos in sites.keys() and sites[pos].kind != 'SNP' and read.base_quality[pos] >= stats_params["base_quality"]:
+                        count_tuple(sites[pos], snp, read.bases[pos], snp_read.bases[snp.pos], sample_name)
 
 def bulk_stats(site, bulk_bam):
     sample_reads = dict()
 
-    bases = {"A":0, "C":0, "G":0, "T":0}
-    for read in bulk_bam.fetch(site.CHROM,  site.POS, site.POS+1):
+    bases = {"A" : 0, "C" : 0, "G" : 0, "T" : 0}
+    for read in bulk_bam.fetch(site.chrom,  site.pos, site.pos+1):
         if read.mapping_quality >= stats_params["mapping_quality"]:
             r = Read(read.query_name, None, read.query_sequence, read.get_aligned_pairs(),
                 read.reference_start, read.reference_end-1, read.query_qualities, read.mapping_quality, False)
-            if site.POS in r.base_quality.keys() and r.base_quality[site.POS] >= stats_params["base_quality"]:
-                base = r.bases[site.POS]
+            if site.pos in r.base_quality.keys() and r.base_quality[site.pos] >= stats_params["base_quality"]:
+                base = r.bases[site.pos]
                 if base in bases.keys():
                     bases[base] += 1
-    
-    
+
     T = sum(list(bases.values()))
     if T > 0:
-        site.BULK_INFO['A'] = bases['A']
-        site.BULK_INFO['C'] = bases['C']
-        site.BULK_INFO['G'] = bases['G']
-        site.BULK_INFO['T'] = bases['T']
-        site.BULK_INFO['SUM'] = T           
+        site.bulk['A'] = bases['A']
+        site.bulk['C'] = bases['C']
+        site.bulk['G'] = bases['G']
+        site.bulk['T'] = bases['T']
+        site.bulk['SUM'] = T           
         
         bulk_bases = 0
-        if site.TYPE != 'SNP' and float(site.BULK_INFO[site.REF])/T < stats_params["bulk_ref_limit"]:
-            site.TYPE = 'E'
-        # for v in site.BULK_INFO.values():
-        #     if v > 0:
-        #         bulk_bases += 1
-        # if bulk_bases > 1 and site.TYPE != 'SNP':
-        #     site.TYPE = 'E'
-        # elif bulk_bases == 1 and site.TYPE != 'SNP':
-        #     max_base = max(list(site.BULK_INFO.items()), key=lambda t: t[1])[0]
-        #     if max_base != site.REF:
-        #         site.TYPE = 'E'
-
-
-def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, output_name, queue):
-    bams, bam_bulk = get_bams(bams_path)
-    reference_genome_file = pysam.Fastafile(reference_path)
-
-    sites = dict()
-    old_end = 0
-    json_path = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
-    json_file = Site2JSON(json_path)
-
-    snps_reader = csv.DictReader(open(snps_chunk_path, 'rU'), delimiter='\t')
-    for row in snps_reader:
-        snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
-        
-        reads = get_reads(snp, bams)
-        new_start, new_end = snp_limits(snp, reads)
-        
-        if (new_start == None and new_end == None):            
-            for s in sites.values():
-                if s.TYPE == '':
-                    bulk_stats(s, bam_bulk)
-                json_file.write(s)
-            sites = dict()
-            old_end = 0
-            continue
-        
-        if new_start - old_end > stats_params["fragment_length"]:
-            for s in sites.values():
-                if s.TYPE == '':
-                    bulk_stats(s, bam_bulk)
-                json_file.write(s)
-            sites = dict()
-        
-        reference = get_references(snp.CHROM, new_start, new_end, reference_genome_file)
-        for pos in range(new_start, new_end+1):
-            if pos not in sites.keys() and reference[pos] != None:
-                site = init_site(snp, sample_names, reference, pos) 
-                allele_counter(reads, site, pos) 
-                if not is_indel(site):
-                    sites[pos] = site
-                    define_altenative(sites[pos])
-        mut_snp(snp, sites, reads)
-        old_end = new_end
-        
-        queue.put(1)
-        
-    for s in sites.values():
-        if s.TYPE == '':
-            bulk_stats(s, bam_bulk)
-        json_file.write(s)
-    json_file.close()
-        
-def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+        if site.kind != 'SNP' and float(site.bulk[site.ref])/T < stats_params["bulk_ref_limit"]:
+            site.kind = 'ERROR'
 
 def get_bams(bam_paths):
     bam_reader = csv.DictReader(open(bam_paths, 'rU'), delimiter='\t')
@@ -462,6 +352,62 @@ def get_bams(bam_paths):
             bams.append((row['NAME'], pysam.AlignmentFile(row['PATH'], 'rb')))  
     return bams, bam_bulk
 
+def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, output_name, queue):
+    bams, bam_bulk = get_bams(bams_path)
+    reference_genome_file = pysam.Fastafile(reference_path)
+
+    sites = dict()
+    old_end = 0
+    json_path = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
+    json_file = SiteToJSON(json_path)
+
+    snps_reader = csv.DictReader(open(snps_chunk_path, 'rU'), delimiter='\t')
+    for row in snps_reader:
+        snp = Site(row['CHROM'], int(row['POS']) - 1, (row['REF'].strip()), {"A1":row['ALT'].strip()}, 'SNP', dict(), sample_names)
+        
+        reads = get_reads(snp, bams)
+        new_start, new_end = snp_limits(snp, reads)
+        
+        if (new_start == None and new_end == None):            
+            for s in sites.values():
+                if s.kind == '':
+                    bulk_stats(s, bam_bulk)
+                json_file.write(s)
+            sites = dict()
+            old_end = 0
+            continue
+        
+        if new_start - old_end > stats_params["fragment_length"]:
+            for s in sites.values():
+                if s.kind == '':
+                    bulk_stats(s, bam_bulk)
+                json_file.write(s)
+            sites = dict()
+        
+        reference = get_references(snp.chrom, new_start, new_end, reference_genome_file)
+        for pos in range(new_start, new_end+1):
+            if pos not in sites.keys() and reference[pos] != None:
+                site = init_site(snp, sample_names, reference, pos) 
+                allele_counter(reads, site, pos) 
+                if not is_indel(site):
+                    sites[pos] = site
+                    define_altenative(sites[pos])
+        tuple_counter(snp, sites, reads)
+        old_end = new_end
+        
+        queue.put(1)
+        
+    for s in sites.values():
+        if s.kind == '':
+            bulk_stats(s, bam_bulk)
+        json_file.write(s)
+    json_file.close()
+        
+# Yield successive n-sized chunks from l.
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
 def blocks(files, size=65536):
     while True:
         b = files.read(size)
@@ -473,7 +419,6 @@ def new_chunk_file(chunk_number, output_name):
     chunk_file = open(chunk_path, 'w')
     chunk_file.write('CHROM' + '\t' + 'POS' + '\t' + 'REF' + '\t' + 'ALT' + '\n')
     return chunk_file, chunk_path
-
 
 def snps_to_chunks(snps_path, nodes, output_name):
     print('Loading SNPS ...')
@@ -549,8 +494,10 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
     if not os.path.exists('../results/'):
         os.makedirs('../results/')
 
-    # os.system("rm ./.conbase/chunk_*")	
-    # os.system("rm ./.conbase/snp_chunk_*")
+    # TODO: print that remove files
+    os.system("rm ./.conbase/" + output_name + "_chunk_*")	
+    os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
+
     sample_names = get_sample_names(bam_paths)
     snps_chunks_path, nr_snps = snps_to_chunks(snps_path, nodes, output_name)
     nr_chunks = len(snps_chunks_path)
@@ -581,5 +528,6 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
     for i in range(nr_chunks):
         f = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
         os.system('cat '+f+' >> ../results/' + output_name + '.json')
+
     os.system("rm ./.conbase/" + output_name + "_chunk_*")	
     os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
