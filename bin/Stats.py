@@ -4,26 +4,47 @@ import json
 import multiprocessing as mp
 from Params import stats_params
 
-acceptable_bases = {'A','C','G','T'}
-skipped_mate = 0
 
 class JSONSerializable(object):
     def __repr__(self):
         return json.dumps(self.__dict__, default = lambda o: o.__dict__)
 
 class Site(JSONSerializable):
+
+    """
+        Class Site is a representation of a genomic site and may hold information relating to that site,
+        such as the reference base and alternative bases (from BAM file), type of site (SNP, undetermined, etc)
+        and the Sample objects associated with the specific site. 
+    """
     def __init__(self, chrom, pos, ref, alts, kind, samples, sample_names):
+
+        """
+            Args:
+                chrom (str): chromosome
+                pos (int): genomic position (zero-indexed)
+                ref (str): reference base (e.g. A, C, G, T)
+                alts (dict): dict of alternative bases (A1, A2, A3) where the read depth of A1 >= A2 >= A3 (eg. {'A1' : 'C', 'A2' : 'G', 'A3' : 'T'} if ref is 'A')
+                kind (str): type of site (e.g. SNP, homozygous, heterozygous, undefined)
+                samples (dict): mapping of a sample name to a Sample object
+                sample_names (list): list of sample names in the same order as the BAM file
+            
+            Attributes:
+                true_pos (int): one-indexed genomic position
+                bulk (dict): dictionary of read depth for bases in bulk (e.g. {'A' : 30, 'C' : 40, 'G' : 0, 'T' : 0, 'SUM' : 70})
+                snp_ms_win (dict): ??
+        """
         self.chrom = chrom
-        self.pos = pos  # 0-index
-        self.true_pos = pos + 1  
+        self.pos = pos 
         self.ref = ref
         self.alts = alts
-        self.bulk = dict()
-        self.kind = kind # SNP, ERROR, HOMO, ...
-        self.snp_ms_win = dict()
+        self.kind = kind
         self.samples = samples
         if not samples:
             self.init_samples(sample_names)
+
+        self.true_pos = pos + 1  
+        self.bulk = dict()
+        self.snp_ms_win = dict()
 
     def init_samples(self, sample_names):
         for sample_name in sample_names:
@@ -116,8 +137,6 @@ def get_reads(snp, bams):
                 try:
                     m = mates[r.id]
                     if m.mate != None:
-                        global skipped_mate
-                        skipped_mate += 1
                         continue
                     r.mate = m
                     m.mate = r
@@ -141,7 +160,7 @@ def get_references(chrom, start, end, ref_file):
     for i in range(0, end-start+1):
         pos = i + start
         base = sequence[i]
-        if base not in acceptable_bases:
+        if base not in stats_params["acceptable_bases"]:
             base = None
         aligned_pairs[pos] = base
     return aligned_pairs
@@ -180,7 +199,7 @@ def allele_counter(reads, site, pos):
         for read in sample_reads:
             if pos in read.bases.keys():
                 base = read.bases[pos].upper()
-                if base in acceptable_bases and read.bases[pos] != None and read.base_quality[pos] > stats_params["base_quality"]:
+                if base in stats_params["acceptable_bases"] and read.bases[pos] != None and read.base_quality[pos] > stats_params["base_quality"]:
                     site.samples[sample_name].AD[base] += 1
                 elif base in {'D', 'I'}:
                      site.samples[sample_name].indels += 1
@@ -222,7 +241,7 @@ def define_altenative(site):
         if sum_votes > 0:
             vote_ratio = max_vote_allele[0][1]/sum_votes
 
-        site.alts = {'A1': None, 'A2': None, 'A3':None}
+        site.alts = {'A1' : None, 'A2': None, 'A3' : None}
         if vote_ratio >= stats_params["vote_ratio_limit"] and sum_votes >= stats_params["sample_vote_limit"]:
             i = 1
             for b in max_vote_allele:
