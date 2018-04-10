@@ -163,32 +163,23 @@ class HTML(object):
 
             self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
             tuples_list = sorted(list(site.samples[sample_name].tuples.items()), key=lambda x: x[0])
-            for snp_pos, tuples in tuples_list:
-                if tuples.get_ms_total() > 0:
-                    if tuples.voted != '':
+            for snp_pos, tuple in tuples_list:
+                if get_ms_total(tuple) > 0:
+                    if tuple['voted'] != '':
                         self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) +  '</td>\n')
                         self.source_code.append('<td colspan=2>tuple: ' + str(site.snp_ms_win[snp_pos]) + '</td></tr>\n')
-                        if tuples.voted == 'UNKNOWN':
-                            self.source_code.append('<tr><td class="voted_unknown" colspan=5> voted: ' + tuples.voted + '</td></tr>\n')
+                        if tuple['voted'] == 'UNKNOWN':
+                            self.source_code.append('<tr><td class="voted_unknown" colspan=5> voted: ' + tuple['voted'] + '</td></tr>\n')
                         else:
-                            self.source_code.append('<tr><td class="voted" colspan=5> voted: ' + tuples.voted + '</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted" colspan=5> voted: ' + tuple['voted'] + '</td></tr>\n')
                     else:
                         self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
 
-#                    self.source_code.append('<tr><td colspan=2>GT distribution</td>\n')
-
-#                    self.source_code.append('<td>' + str(tuples.homo_R) + '</td>\n')
-#                    self.source_code.append('<td>' + str(tuples.het) + '</td>\n')
-#                    self.source_code.append('<td>' + str(tuples.homo_A1) + '</td></tr>\n')
-#
-#                    self.source_code.append('<td>' + str(tuples.homo_R) + '</td>\n')
-#                    self.source_code.append('<td>' + str(tuples.het) + '</td>\n')
-#                    self.source_code.append('<td>' + str(tuples.homo_A1) + '</td></tr>\n')
                     self.source_code.append('<tr>\n')
-                    self.source_code.append('<td> RR: ' + str(tuples.RR) + '</td>\n')
-                    self.source_code.append('<td> RA: ' + str(tuples.RA) + '</td>\n')
-                    self.source_code.append('<td> AR: ' + str(tuples.AR) + '</td>\n')
-                    self.source_code.append('<td> AA: ' + str(tuples.AA) + '</td></tr>\n')
+                    self.source_code.append('<td> RR: ' + str(tuple['RR']) + '</td>\n')
+                    self.source_code.append('<td> RA: ' + str(tuple['RA']) + '</td>\n')
+                    self.source_code.append('<td> AR: ' + str(tuple['AR']) + '</td>\n')
+                    self.source_code.append('<td> AA: ' + str(tuple['AA']) + '</td></tr>\n')
                     self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
             self.source_code.append('</table>\n')
             self.source_code.append('</td>')

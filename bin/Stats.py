@@ -61,13 +61,13 @@ class Sample(JSONSerializable):
         return str_AD
 
 class Read(object):
-    def __init__(self, id, mate, sequence, tuples, start, end, base_quality, mapping_quality, has_snp):
+    def __init__(self, id, mate, sequence, ind_pos, start, end, base_quality, mapping_quality, has_snp):
         self.id = id
         self.mate = mate
         self.start = start
         self.end = end
-        self.bases = self.init_bases(tuples, sequence)
-        self.base_quality = self.init_base_quality(tuples, base_quality)
+        self.bases = self.init_bases(ind_pos, sequence)
+        self.base_quality = self.init_base_quality(ind_pos, base_quality)
         self.mapping_quality = mapping_quality
         self.has_snp = has_snp
 
@@ -76,10 +76,10 @@ class Read(object):
     
     # D: AA<C>G -> [(0,100), (1,101), (None,102), (2,103)]
     # I: AA<C>G -> [(0,100), (1,101), (2,None), (3,102)]
-    def init_bases(self,tuples,sequence):
+    def init_bases(self,ind_pos,sequence):
         bases = dict()
         base_quality = dict()
-        for i, p in tuples:
+        for i, p in ind_pos:
             if p != None and i != None:
                 bases[p] = sequence[i]
             elif p != None and i == None: # D
@@ -90,65 +90,14 @@ class Read(object):
             # if self.start <= 76111775 and self.end >= 76111775 and p==None:
         return bases 
 
-    def init_base_quality(self, tuples, base_quality_list):
+    def init_base_quality(self, ind_pos, base_quality_list):
         base_quality = dict()
-        for i, p in tuples:
+        for i, p in ind_pos:
             if p != None and i != None:
                 base_quality[p] = base_quality_list[i] 
             elif p != None and i == None:
                 base_quality[p] = 0      
         return base_quality 
-
-class Tuple(JSONSerializable):
-    def __init__(self):
-        self.RR = 0
-        self.RA = 0
-        self.AR = 0
-        self.AA = 0
-        self.stats = ''
-        self.voted = ''
-        self.het = None
-        self.homo_R = None
-        self.homo_A1 = None
-        
-    def get_ms_total(self):
-        return sum([self.RR,self.RA,self.AR,self.AA])
-
-    def get_tuples_ratio(self, ms_pair):
-        T = self.get_ms_total()
-
-        if T > 0:
-            RR = float(self.RR)/T
-            RA = float(self.RA)/T
-            AR = float(self.AR)/T
-            AA = float(self.AA)/T
-
-            het1 = [RR, AA]
-            het2 = [RA, AR]
-            
-            if ms_pair is None:
-                het = ("HET-C1", 0, 0)
-            else:
-                if ms_pair == 'AA':
-                    het_ = (sum(het1), het1, "AA")
-                elif ms_pair == 'AR':
-                    het_ = (sum(het2), het2, "AR")
-                    
-                het = ("HET-C1", sum(het_[1]), ratio(het_[1][0], het_[1][1]), het_[2])
-
-            homo_R = ("HOMO-C1", (RR+RA), ratio(RR,RA))
-            homo_A1 = ("HOMO-A1", (AR+AA), ratio(AR,AA))
-            self.stats = "H0:{homo_R}/{homo_R_ratio}, H:{het}/{het_ratio}, A1:{homo_A1}/{homo_A1_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2), het=round(het[1],2), het_ratio=round(het[2],2), homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
-            
-            self.het = "H0:{homo_R}/{homo_R_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2))
-            self.homo_R ="H:{het}/{het_ratio}".format(het=round(het[1],2), het_ratio=round(het[2],2))
-            self.homo_A1 = "A1:{homo_A1}/{homo_A1_ratio}".format(homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
-            return het, homo_R, homo_A1
-        else:
-            return None, None, None
-            
-    def get_stats(self):
-        return self.stats
 
 def get_reads(snp, bams):
     sample_reads = dict()
@@ -289,16 +238,16 @@ def define_altenative(site):
 
 def count_tuple(site, snp, site_base, snp_base, sample_name):
     if snp.pos not in site.samples[sample_name].tuples.keys():
-        site.samples[sample_name].tuples[snp.pos] = Tuple()
+        site.samples[sample_name].tuples[snp.pos] = dict()
 
     if site_base == site.ref and snp_base == snp.ref:
-            site.samples[sample_name].tuples[snp.pos].RR += 1
+            site.samples[sample_name].tuples[snp.pos]['RR'] += 1
     elif site_base == site.ref and snp_base == snp.alts['A1']:
-            site.samples[sample_name].tuples[snp.pos].RA += 1
+            site.samples[sample_name].tuples[snp.pos]['RA'] += 1
     elif site_base == site.alts['A1'] and snp_base == snp.ref:
-            site.samples[sample_name].tuples[snp.pos].AR += 1
+            site.samples[sample_name].tuples[snp.pos]['AR'] += 1
     elif site_base == site.alts['A1'] and snp_base == snp.alts['A1']:
-            site.samples[sample_name].tuples[snp.pos].AA += 1
+            site.samples[sample_name].tuples[snp.pos]['AA'] += 1
 
 def tuple_counter(snp, sites, reads):
     for sample_name, sample_reads in reads.items():
