@@ -23,7 +23,8 @@ class Site(JSONSerializable):
                 chrom (str): chromosome
                 pos (int): genomic position (zero-indexed)
                 ref (str): reference base (e.g. A, C, G, T)
-                alts (dict): dict of alternative bases (A1, A2, A3) where the read depth of A1 >= A2 >= A3 (eg. {'A1' : 'C', 'A2' : 'G', 'A3' : 'T'} if ref is 'A')
+                alts (dict): dict of alternative bases (A1, A2, A3) where the read depth of A1 >= A2 >= A3 
+                    (eg. {'A1' : 'C', 'A2' : 'G', 'A3' : 'T'} if ref is 'A')
                 kind (str): type of site (e.g. SNP, homozygous, heterozygous, undefined)
                 samples (dict): mapping of a sample name to a Sample object
                 sample_names (list): list of sample names in the same order as the BAM file
@@ -51,14 +52,34 @@ class Site(JSONSerializable):
             self.samples[sample_name] = Sample(sample_name, {'A' : 0, 'C' : 0, 'G' : 0, 'T' : 0}, dict(), 'None')
 
 class Sample(JSONSerializable):
+
+    """
+        Class Sample is a representation of a genomic site for a specific sample, and may hold information relating
+        to that sample for that specific site.
+    """
+
     def __init__(self, name, AD, tuples, info):
+        """
+            Args:
+                name (str): name of the sample
+                AD (dict): allelic distribution of the following form: {'A' : 0, 'C' : 0, 'G' : 0, 'T' : 0}
+                tuples (dict): tuples in the form: {'AA' : 0, 'AR' : 0, 'RA' : 0, 'RR' : 0}
+                info (str) : information regarding the genotype (can be unknown), e.g. 'HOMO-C2', 'HET-C1', 'UNKNOWN'
+            
+            Attributes:
+                snp_reads (int): number of reads covering site and the SNV (todo: should be the sum of AD dict values)
+                indels (int): number of reads that are indels
+        """
+
         self.name       = name
         self.AD         = AD
-        self.snp_reads  = 0
         self.tuples     = tuples
         self.info       = info
+        self.snp_reads  = 0
         self.indels     = 0
 
+    
+    #todo: move to File_Output.py
     def get_AD(self, site):
         str_AD = ""
         alts = [k for k, v in site.alts.items() if v != None and self.AD[v] > 0]
@@ -82,7 +103,31 @@ class Sample(JSONSerializable):
         return str_AD
 
 class Read(object):
+    """
+        Class Read is a representation of an aligned read, based on pysam.AlignmentSegment.
+        It holds information regarding the mate, start and endposition, bases, base and mapping qualities
+        and whether the read contains an SNV.
+    """
     def __init__(self, id, mate, sequence, ind_pos, start, end, base_quality, mapping_quality, has_snp):
+        """
+            Args:
+                id (str): query_name (pysam.AlignmentSegment: the query template name (None if not present))
+                mate (Read): the Read-mate (None if not present)
+                sequence (list): query_sequence (pysam.AlignmentSegment: read sequence bases, including soft 
+                    clipped bases (None if not present))
+                ind_pos (list of tuples) : get_aligned_pairs (pysam.AlignmentSegment: a list of aligned read 
+                    (query) and reference positions. For inserts, deletions, skipping either query or reference position may be None.) 
+                start (int) : reference_start (pysam.AlignmentSegment: 0-based leftmost coordinate)
+                end (int) : reference_end - 1 (pysam.AlignmentSegment: aligned reference position of the read on the reference genome. 
+                    reference_end points to one past the last aligned residue. Returns None if not available (read is unmapped or no cigar 
+                    alignment present)). This will thus be the last position in the sequence.
+                base_quality (dict): query_qualities (pysam.AlignmentSegment: read sequence base qualities, including* – term* – soft 
+                    clipped bases (None if not present). Quality scores are returned as a python array of unsigned chars.) Note that we 
+                    have transformed this to a dict, where the key is the position and value is the quality score.
+                mapping_quality (int): mapping_quality (pysam.AlignmentSegment: mapping quality for read)
+                has_snp (bool): if the read or read mate covers an SNV
+
+        """
         self.id = id
         self.mate = mate
         self.start = start
@@ -95,8 +140,6 @@ class Read(object):
     def __str__(self):
         return "ID: {ID}, MATE: {MATE}, SEQ: {SEQ}, START: {START}, END: {END}".format(ID = self.id, MATE = self.mate.id, SEQ = self.bases, START = self.start, END = self.end)
     
-    # D: AA<C>G -> [(0,100), (1,101), (None,102), (2,103)]
-    # I: AA<C>G -> [(0,100), (1,101), (2,None), (3,102)]
     def init_bases(self,ind_pos,sequence):
         bases = dict()
         base_quality = dict()
@@ -121,6 +164,17 @@ class Read(object):
         return base_quality 
 
 def get_reads(snp, bams):
+    """ 
+        get_reads: given an SNV position, this method returns all reads within a left and right interval
+                    of "fragment_length" in Params.py that has "mapping_quality" in Params.py
+
+        Args:
+            snp (SNP object): the SNP object
+            bams (list of tuples of (str, pysam.AlignmentFile)): name and pysam.AlignmentFile for all BAM-files
+
+        Returns:
+            returns a dict of names as keys and a list of Read-objects as values
+    """
     sample_reads = dict()
     for bam_name, bam_file in bams:
         reads = list()
@@ -152,6 +206,17 @@ def get_reads(snp, bams):
     return sample_reads
 
 def get_references(chrom, start, end, ref_file):
+    """ 
+        Args:
+            chrom (str): chromosome
+            start (int): start position
+            end (int): ending position
+            ref_file (pysam.FastaFile): reference file reader
+
+        Returns:
+            dict of key (int): position and value (str): base
+    """
+
     try:
         sequence = ref_file.fetch(chrom, start, end+1)
     except KeyError:
@@ -173,8 +238,15 @@ def init_site(snp, sample_names, reference, pos):
         site = Site(snp.chrom, pos, ref, None, '', dict(), sample_names)
     return site
 
-# snp_limit returns min and max position for all reads belonging to a snp, otherwise none
 def snp_limits(snp, reads):
+    """ 
+        Args:
+            snp (SNP object): SNP object
+            reads (list of tuples (str, Read obects)): sample name and corresponding Reads
+
+        Returns:
+            min and max position for all Reads belonging to a SNV, otherwise None
+    """
     start = list()
     end = list()
     found_snp = False
@@ -194,12 +266,18 @@ def snp_limits(snp, reads):
     else:
         return None, None
 
-def allele_counter(reads, site, pos):
+def allele_counter(reads, site):
+    """ 
+        allele_countee: performs allele counter, i.e. counting the allelic distribution
+        Args:
+            reads (list of tuples (str, Read obects)): sample name and corresponding Reads
+            site (Site object): Site object
+    """
     for sample_name, sample_reads in reads.items():
         for read in sample_reads:
-            if pos in read.bases.keys():
-                base = read.bases[pos].upper()
-                if base in stats_params["acceptable_bases"] and read.bases[pos] != None and read.base_quality[pos] > stats_params["base_quality"]:
+            if site.pos in read.bases.keys():
+                base = read.bases[site.pos].upper()
+                if base in stats_params["acceptable_bases"] and read.bases[site.pos] != None and read.base_quality[site.pos] > stats_params["base_quality"]:
                     site.samples[sample_name].AD[base] += 1
                 elif base in {'D', 'I'}:
                      site.samples[sample_name].indels += 1
@@ -356,7 +434,7 @@ def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, o
         for pos in range(new_start, new_end+1):
             if pos not in sites.keys() and reference[pos] != None:
                 site = init_site(snp, sample_names, reference, pos) 
-                allele_counter(reads, site, pos) 
+                allele_counter(reads, site) 
                 if not is_indel(site):
                     sites[pos] = site
                     define_altenative(sites[pos])
