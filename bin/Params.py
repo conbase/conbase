@@ -17,7 +17,7 @@ stats_params = {
 }
 ############### Analyze #################
 analyze_params = {
-"dp_ms_limit" : 10,
+"dp_tuple_limit" : 10,
 "snp_total_vote" : 0.9,
 "snp_vote_ratio" : 0.9,
 
@@ -30,11 +30,11 @@ analyze_params = {
 
 "homo_error_allowed" : 0,
 
-"ms_group_ratio" : 0.01,
+"tuple_group_ratio" : 0.01,
 "win_internal_group_ratio" : 0.1,
 
-"sample_ms_vote_limit" : 2,
-"vote_ms_ratio_limit" : 0.9,
+"sample_tuple_vote_limit" : 2,
+"vote_tuple_ratio_limit" : 0.9,
 
 "conflicting_upper_limit" : 100,
 "c3_conflicting_upper_limit" : 100,

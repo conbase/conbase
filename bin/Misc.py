@@ -42,7 +42,7 @@ def trees_stats(sites,output):
     f = open(output+'_trees_stats.txt','w')
     # f.write("Percentage of positions with at least one green: " + str(float(len(filtered_sites))/len(sites))+"\n")
     # f.write("Percentage of positions with impossible genotype distributions: " + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n")
-    f.write(str(analyze_params['dp_ms_limit']) + '\t' + str(analyze_params['tuples_internal_ratio']) + '\t' + str(analyze_params['tuples_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
+    f.write(str(analyze_params['dp_tuple_limit']) + '\t' + str(analyze_params['tuples_internal_ratio']) + '\t' + str(analyze_params['tuples_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
     return filtered_sites
 
 

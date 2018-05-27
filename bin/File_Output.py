@@ -164,10 +164,10 @@ class HTML(object):
             self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
             tuples_list = sorted(list(site.samples[sample_name].tuples.items()), key=lambda x: x[0])
             for snp_pos, tuple in tuples_list:
-                if get_ms_total(tuple) > 0:
+                if count_total_tuples(tuple) > 0:
                     if tuple['voted'] != '':
                         self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) +  '</td>\n')
-                        self.source_code.append('<td colspan=2>tuple: ' + str(site.snp_ms_win[snp_pos]) + '</td></tr>\n')
+                        self.source_code.append('<td colspan=2>tuple: ' + str(site.snp_tuple_star[snp_pos]) + '</td></tr>\n')
                         if tuple['voted'] == 'UNKNOWN':
                             self.source_code.append('<tr><td class="voted_unknown" colspan=5> voted: ' + tuple['voted'] + '</td></tr>\n')
                         else:

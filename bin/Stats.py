@@ -32,7 +32,7 @@ class Site(JSONSerializable):
             Attributes:
                 true_pos (int): one-indexed genomic position
                 bulk (dict): dictionary of read depth for bases in bulk (e.g. {'A' : 30, 'C' : 40, 'G' : 0, 'T' : 0, 'SUM' : 70})
-                snp_ms_win (dict): ??
+                snp_tuple_star (dict): tp*
         """
         self.chrom = chrom
         self.pos = pos 
@@ -45,7 +45,7 @@ class Site(JSONSerializable):
 
         self.true_pos = pos + 1  
         self.bulk = dict()
-        self.snp_ms_win = dict()
+        self.snp_tuple_star = dict()
 
     def init_samples(self, sample_names):
         for sample_name in sample_names:
@@ -268,7 +268,7 @@ def snp_limits(snp, reads):
 
 def allele_counter(reads, site):
     """ 
-        allele_countee: performs allele counter, i.e. counting the allelic distribution
+        allele_counter: performs allele counter, i.e. counting the allelic distribution
         Args:
             reads (list of tuples (str, Read obects)): sample name and corresponding Reads
             site (Site object): Site object
@@ -283,6 +283,11 @@ def allele_counter(reads, site):
                      site.samples[sample_name].indels += 1
 
 def is_indel(site):
+    """ 
+        is_indel: returns a Boolean whether a site is an indel or not (performed over all samples)
+        Args:
+            site (Site object): Site object
+    """
     tot_indel_ratio = 0.0
     for sample in site.samples.values():
         tot_indel_ratio += float(sample.indels)/sum(sample.AD.values()) if sum(sample.AD.values()) > 0 else 0
@@ -295,6 +300,12 @@ def ratio(num1, num2):
         return 0.0
 
 def define_altenative(site):
+    """ 
+        define_alternative: assigns a Site as either alternative, homogenous or undefined
+        this function depends on four parameters: alt_ratio_limit, dp_limit, vote_ratio_limit and sample_vote_limit  
+        Args:
+            site (Site object): Site object
+    """
     if site.alts is None:
         allele_vote = {'A' : 0, 'C' : 0, 'G' : 0, 'T' : 0}
         for sample in site.samples.values():
@@ -334,6 +345,15 @@ def define_altenative(site):
             site.kind = 'HOMO'
 
 def count_tuple(site, snp, site_base, snp_base, sample_name):
+    """ 
+        count_tuple: count tuples for a given sample
+        Args:
+            site (Site object): Site object
+            snp (Site object): Site object
+            site_base (str): base for the site
+            snp_base (str): base for the snp
+            sample_name (str): name of sample
+    """
     if snp.pos not in site.samples[sample_name].tuples.keys():
         site.samples[sample_name].tuples[snp.pos] = dict()
 
@@ -347,6 +367,13 @@ def count_tuple(site, snp, site_base, snp_base, sample_name):
             site.samples[sample_name].tuples[snp.pos]['AA'] += 1
 
 def tuple_counter(snp, sites, reads):
+    """ 
+        tuple_counter: count tuples for all samples (for a given a region with an SNP)
+        Args:
+            snp (Site object): Site object
+            sites (list): list of Site objects
+            reads (list): list of Read objects
+    """
     for sample_name, sample_reads in reads.items():
         for read in sample_reads:
             if read.has_snp:
@@ -362,6 +389,12 @@ def tuple_counter(snp, sites, reads):
                         count_tuple(sites[pos], snp, read.bases[pos], snp_read.bases[snp.pos], sample_name)
 
 def bulk_stats(site, bulk_bam):
+    """ 
+        bulk_stats: counts base distribution for the bulk in a given site
+        Args:
+            site (Site object): Site object
+            bulk_bam (pysam.AlignmentFile): pysam AlignmentFile for bulk
+    """
     sample_reads = dict()
 
     bases = {"A" : 0, "C" : 0, "G" : 0, "T" : 0}
@@ -387,6 +420,11 @@ def bulk_stats(site, bulk_bam):
             site.kind = 'ERROR'
 
 def get_bams(bam_paths):
+    """ 
+        get_bams: returns pysam AlignmentFile objects for given bam paths
+        Args:
+            bam_paths (str): paths to bam files
+    """
     bam_reader = csv.DictReader(open(bam_paths, 'rU'), delimiter='\t')
     bams = []
     bam_bulk = None
@@ -399,6 +437,19 @@ def get_bams(bam_paths):
     return bams, bam_bulk
 
 def stats_to_json(i, snps_chunk_path, bams_path, sample_names, reference_path, output_name, queue):
+    """ 
+        stats_to_json: runs main stats for a given snp chunk and creates a json-file 
+                       with the stats results
+        Args:
+            i (int): chunk ID
+            snps_chunk_path (str): file name for chunk path
+            bams_path (str): path to BAM files
+            sample_names (list): list of strings for sample names
+            reference_path (str): path to reference
+            output_name (str): name of main json-output file
+            queue (Queue object): queue needed for multithreading
+
+    """
     bams, bam_bulk = get_bams(bams_path)
     reference_genome_file = pysam.Fastafile(reference_path)
 
@@ -467,6 +518,13 @@ def new_chunk_file(chunk_number, output_name):
     return chunk_file, chunk_path
 
 def snps_to_chunks(snps_path, nodes, output_name):
+    """ 
+        snps_to_chunks: splits snps from a file into even-sized chunks
+        Args:
+            snps_path (str): path to snp files
+            nodes (int): number of nodes/chunks
+            output_name (str): name of output file 
+    """
     print('Loading SNPS ...')
     if nodes == 1:
         return [snps_path]
@@ -534,6 +592,15 @@ def progress_bar(nr_snps, queue, bar_width=100):
                 prev_progress = current_progress
 
 def stats(snps_path, bam_paths, reference_path, nodes, output_name): 
+    """ 
+        stats: main function for Stats.py
+        Args:
+            snps_path (str): path to snp files
+            bam_paths (str): path to bam files
+            reference_path (str): path to reference file
+            nodes (int): number of nodes/chunks
+            output_name (str): name of output file 
+    """
     if not os.path.exists("./.conbase"):
         os.makedirs("./.conbase")
 

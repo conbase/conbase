@@ -5,44 +5,59 @@ from Params import analyze_params
 
 
     
-def get_ms_total(tuple):
-    return sum([tuple['RR'],tuple['RA'],tuple['AR'],tuple['AA']])
+def count_total_tuples(site_tuples):
+    return sum([site_tuples['RR'], site_tuples['RA'], site_tuples['AR'], site_tuples['AA']])
 
-def get_tuples_ratio(tuple, ms_pair):
-    T = get_ms_total(tuple)
+def get_tuples_ratio(site_tuples, tuple_star):
+    """ 
+        get_tuples_ratio: calculates the ratio between tuples for a given tuple
+        Args:
+            site_tuples (dict): tuples for a Site object 
+            tuple_star (str): tuple with the most votes (tp*) 
+        Returns:
+            het, homo_R, homo_A1 (str): ratios for het, homo_R, homo_A1 (may be None if count_total_tuples <= 0)
+    """
+    T = count_total_tuples(site_tuples)
 
     if T > 0:
-        RR = float(tuple['RR'])/T
-        RA = float(tuple['RA'])/T
-        AR = float(tuple['AR'])/T
-        AA = float(tuple['AA'])/T
+        RR = float(site_tuples['RR'])/T
+        RA = float(site_tuples['RA'])/T
+        AR = float(site_tuples['AR'])/T
+        AA = float(site_tuples['AA'])/T
 
         het1 = [RR, AA]
         het2 = [RA, AR]
         
-        if ms_pair is None:
+        if tuple_star is None:
             het = ("HET-C1", 0, 0)
         else:
-            if ms_pair == 'AA':
+            if tuple_star == 'AA':
                 het_ = (sum(het1), het1, "AA")
-            elif ms_pair == 'AR':
+            elif tuple_star == 'AR':
                 het_ = (sum(het2), het2, "AR")
                 
             het = ("HET-C1", sum(het_[1]), ratio(het_[1][0], het_[1][1]), het_[2])
 
         homo_R = ("HOMO-C1", (RR+RA), ratio(RR,RA))
         homo_A1 = ("HOMO-A1", (AR+AA), ratio(AR,AA))
-        tuple['stats'] = "H0:{homo_R}/{homo_R_ratio}, H:{het}/{het_ratio}, A1:{homo_A1}/{homo_A1_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2), het=round(het[1],2), het_ratio=round(het[2],2), homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
+        site_tuples['stats'] = "H0:{homo_R}/{homo_R_ratio}, H:{het}/{het_ratio}, A1:{homo_A1}/{homo_A1_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2), het=round(het[1],2), het_ratio=round(het[2],2), homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
         
-        tuple['het'] = "H0:{homo_R}/{homo_R_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2))
-        tuple['homo_R'] ="H:{het}/{het_ratio}".format(het=round(het[1],2), het_ratio=round(het[2],2))
-        tuple['homo_A1'] = "A1:{homo_A1}/{homo_A1_ratio}".format(homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
+        site_tuples['het'] = "H0:{homo_R}/{homo_R_ratio}".format(homo_R= round(homo_R[1],2), homo_R_ratio=round(homo_R[2],2))
+        site_tuples['homo_R'] ="H:{het}/{het_ratio}".format(het=round(het[1],2), het_ratio=round(het[2],2))
+        site_tuples['homo_A1'] = "A1:{homo_A1}/{homo_A1_ratio}".format(homo_A1=round(homo_A1[1],2), homo_A1_ratio = round(homo_A1[2],2))
         return het, homo_R, homo_A1
     else:
         return None, None, None
 
-# TODO
+
 def json_to_site(f):
+    """ 
+        json_to_site: parse json file to Site objects
+        Args:
+            f (file pointer): file pointer to json file  
+        Returns:
+            site (Site object): yields Site objects
+    """
     for line in f:
         s = json.loads(line.strip('\n'))    
         samples = dict()
@@ -50,17 +65,17 @@ def json_to_site(f):
         for sample in s['samples'].values():
             snp_pos_list = list(sample['tuples'].keys())
             sample_names.append(sample['name'])
-            tuples_dict = dict()
+            site_tuples_dict = dict()
             for pos in snp_pos_list:
-                tuple = dict()
-                tuple['RR'] = sample['tuples'][pos]['RR']
-                tuple['RA'] = sample['tuples'][pos]['RA']
-                tuple['AR'] = sample['tuples'][pos]['AR']
-                tuple['AA'] = sample['tuples'][pos]['AA']
-                tuple['stats'] = sample['tuples'][pos]['stats']
-                tuples_dict[int(pos)] = tuple
+                site_tuples = dict()
+                site_tuples['RR'] = sample['tuples'][pos]['RR']
+                site_tuples['RA'] = sample['tuples'][pos]['RA']
+                site_tuples['AR'] = sample['tuples'][pos]['AR']
+                site_tuples['AA'] = sample['tuples'][pos]['AA']
+                site_tuples['stats'] = sample['tuples'][pos]['stats']
+                site_tuples_dict[int(pos)] = site_tuples
 
-            samples[sample['name']] = Sample(sample['name'],sample['AD'], tuples_dict, sample['info'])
+            samples[sample['name']] = Sample(sample['name'],sample['AD'], site_tuples_dict, sample['info'])
         site = Site(s['chrom'], s['pos'], s['ref'], s['alts'], s['kind'], samples, sample_names)
         site.bulk = s['bulk']
         yield site
@@ -71,58 +86,69 @@ def ratio(num1, num2):
     else:
         return 0
 
-def define_ms_pair(snp_pos, site):
+def define_tuple_star(snp_pos, site):
+    """ 
+        define_tuple_star: defines tp* (see conbase paper)
+        Args:
+            snp_pos (int): position for snp
+            site (Site object): Site object
+        Returns:
+            (str): tp* (may be None)
+    """
     pairs = {'AR' : 0, 'AA' : 0}
     for sample in site.samples.values():
-        if snp_pos in sample.tuples.keys() and get_ms_total(sample.tuples[snp_pos]) >= analyze_params["dp_ms_limit"]:
-            tuple = sample.tuples[snp_pos]
-            RR, RA, AR, AA = tuple['RR'], tuple['RA'], tuple['AR'], tuple['AA']
+        if snp_pos in sample.tuples.keys() and count_total_tuples(sample.tuples[snp_pos]) >= analyze_params["dp_tuple_limit"]:
+            site_tuples = sample.tuples[snp_pos]
+            RR, RA, AR, AA = site_tuples['RR'], site_tuples['RA'], site_tuples['AR'], site_tuples['AA']
             
             min_, min_name = min(([AR, RA], 'AR'), ([RR, AA], 'AA'), key=lambda x: x[0][0]+x[0][1])
             max_, max_name = max(([AR, RA], 'AR'), ([RR, AA], 'AA'), key=lambda x: x[0][0]+x[0][1])
             
-            if(ratio(sum(min_),sum(max_)) < analyze_params["ms_group_ratio"] and ratio(max_[0], max_[1]) > analyze_params["win_internal_group_ratio"] ):
+            if(ratio(sum(min_),sum(max_)) < analyze_params["tuple_group_ratio"] and ratio(max_[0], max_[1]) > analyze_params["win_internal_group_ratio"] ):
                 #het gets to vote
                 pairs[max_name] += 1
-            elif(ratio(sum(min_),sum(max_)) < analyze_params["ms_group_ratio"] and max((RR, 'RR'), (RA, 'RA'), (AR, 'AR'), (AA, 'AR'))[1] in {'AR', 'AA'}):
+            elif(ratio(sum(min_),sum(max_)) < analyze_params["tuple_group_ratio"] and max((RR, 'RR'), (RA, 'RA'), (AR, 'AR'), (AA, 'AR'))[1] in {'AR', 'AA'}):
                 #HET-C2 gets to vote
                 pairs[max_name] += 1
 
     max_pair = sorted(list(pairs.items()), reverse=True, key=lambda x: x[1])
-    if max_pair[0][1] >= analyze_params["sample_ms_vote_limit"] and ratio(max_pair[0][1], max_pair[1][1]) <= (1-analyze_params["vote_ms_ratio_limit"]):
+    if max_pair[0][1] >= analyze_params["sample_tuple_vote_limit"] and ratio(max_pair[0][1], max_pair[1][1]) <= (1-analyze_params["vote_tuple_ratio_limit"]):
         return max_pair[0][0]
     else:
         return None
 
-def gt_ratio(site):
+def analyze(site):
+    """ 
+        analyze: run analyze (described in detail in the conbase paper)
+        Args:
+            site (Site object): Site object
+    """
     for sample in site.samples.values():
         votes = {'HET-C1':0, 'HET-C2':0, 'HOMO-C1':0,'HOMO-C2':0, 'HOMO-A1':0, 'CONFLICT':0}
         nr_snp_allowed_voting = 0
-        ms_pairs = dict()
+        tuple_stars = dict()
         for snp_pos in sample.tuples.keys():    
-            tuple = sample.tuples[snp_pos]
-            ms_pair = define_ms_pair(snp_pos, site)
-            ms_pairs[snp_pos] = ms_pair
-            het, homo_R, homo_A1 = get_tuples_ratio(tuple, ms_pair)
+            site_tuples = sample.tuples[snp_pos]
+            tuple_star = define_tuple_star(snp_pos, site)
+            tuple_stars[snp_pos] = tuple_star
+            het, homo_R, homo_A1 = get_tuples_ratio(site_tuples, tuple_star)
             
-            if get_ms_total(tuple) >= analyze_params["dp_ms_limit"]:
+            if count_total_tuples(site_tuples) >= analyze_params["dp_tuple_limit"]:
                 tuple['voted'] = ''
-                # if site.pos == 178756156 and sample.name == 'fibroblast_41' and snp_pos == 178756123:
-                #     import pdb; pdb.set_trace()
-                if ms_pair != None:
-                    site.snp_ms_win[snp_pos] = ms_pair              
+                if tuple_star != None:
+                    site.snp_tuple_star[snp_pos] = tuple_star              
                     nr_snp_allowed_voting += 1
                     ##CASE: HOMO-C2 or HET-C2
                     if het[2] < analyze_params["tuples_internal_ratio"] and homo_R[2] < analyze_params["tuples_internal_ratio"]:
                         if homo_R[1] >= analyze_params["tuples_ratio"] and het[1] < analyze_params["tuples_c2_external_error_ratio"]:
                             hr = max((tuple['RR'], 'RR'), (tuple['RA'], 'RA'))
-                            if (hr[1] == 'RR' and ms_pair == 'AR') or (hr[1] =='RA' and ms_pair == 'AA'):
+                            if (hr[1] == 'RR' and tuple_star == 'AR') or (hr[1] =='RA' and tuple_star == 'AA'):
                                 tuple['voted'] = 'HOMO-C2' #we know for certain this is not a mutation
                             else:
                                 tuple['voted'] = 'UNKNOWN'
                         elif homo_R[1] < analyze_params["tuples_c2_external_error_ratio"] and het[1] >= analyze_params["tuples_ratio"]:
                             ha = max((tuple['AA'], 'AA'), (tuple['AR'], 'AR'))
-                            if (ha[1] == 'AA' and ms_pair == 'AR') or (ha[1] =='AR' and ms_pair == 'AA'):
+                            if (ha[1] == 'AA' and tuple_star == 'AR') or (ha[1] =='AR' and tuple_star == 'AA'):
                                 tuple['voted'] = 'CONFLICT'#this is contradictory
                             else:
                                 tuple['voted'] = 'HET-C2'
@@ -134,7 +160,7 @@ def gt_ratio(site):
                         tuples_list = [m for m in [het, homo_R, homo_A1] if m[1] >= analyze_params["tuples_ratio"] and m[2] >= analyze_params["tuples_internal_ratio"]]
                         if len(tuples_list) == 1:
                             if tuples_list[0][0] == 'HET-C1':
-                                if tuples_list[0][3] == ms_pair:
+                                if tuples_list[0][3] == tuple_star:
                                     tuple['voted'] = 'HET-C1'   #mut-snp pair match!
                                 else:                   
                                     tuple['voted'] = 'CONFLICT'              #match is not right
@@ -188,14 +214,13 @@ def gt_ratio(site):
                         else:
                             sample.info = 'UNKNOWN'
                 else:
-                    #TODO Homo-C1 = HOMO-C2
                     sample.info = 'CONFLICT'
         else:
             support_unmutated = 0
             for snp_pos in sample.tuples.keys():    
-                tuple = sample.tuples[snp_pos]
-                ms_pair = ms_pairs[snp_pos]
-                if (ms_pair == 'AA' and tuple['RA'] >= analyze_params["c3_homo_limit"]) or (ms_pair == 'AR' and tuple['RR'] >= analyze_params["c3_homo_limit"]):
+                site_tuples = sample.tuples[snp_pos]
+                tuple_star = tuple_stars[snp_pos]
+                if (tuple_star == 'AA' and site_tuples['RA'] >= analyze_params["c3_homo_limit"]) or (tuple_star == 'AR' and site_tuples['RR'] >= analyze_params["c3_homo_limit"]):
                     support_unmutated += 1
             if support_unmutated > 0:
                 if sample.AD[site.alts['A1']] == 0:
