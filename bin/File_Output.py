@@ -52,11 +52,11 @@ class TABLE_PLOT(object):
     def write_site(self, site):
         color_dict = {"HET-C1":"#7D0839", "HET-C2":"#B54373" ,"HET-C3":"#EBA5C3" ,"HOMO-C1": "#065D4E" ,"HOMO-C2":"#0FA38A" ,"HOMO-C3":"#87E1D2" , "HOMO-A1":"#B26321", "NOT-INFORMATIVE":"#BBBBBB","CONFLICT":"#000000", "UNKNOWN":"#424242"}
 
-        chrom_pos_str = site.chrom + ":" + str(site.true_pos)
+        chrom_pos_str = site.CHROM + ":" + str(site.real_POS())
         self.tb.add_cell(self.row, 0, self.width*2, self.height, text=chrom_pos_str, loc='right', edgecolor='none', facecolor='none')        
         
         if self.a1_param:
-            bulk_a1_ratio = float(site.bulk[site.alts['A1']])/site.bulk['SUM']
+            bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
             bulk_a1_ratio_str = ""
             if bulk_a1_ratio > 0:
                 bulk_a1_ratio_str = '{0:.1f}'.format(bulk_a1_ratio*100)
@@ -95,11 +95,11 @@ class TSV(object):
         return writer
 
     def write_site(self, site):
-        bulk_a1_ratio = float(site.bulk[site.alts['A1']])/site.bulk['SUM']
+        bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
         bulk_a1_ratio_str = ""
         if bulk_a1_ratio > 0:
             bulk_a1_ratio_str = '{0:.2f}'.format(bulk_a1_ratio)
-        self.writer.write(site.chrom + "\t" + str(site.true_pos) + "\t" + str(site.ref) + '\t' + str(site.alts['A1']) + "\t" + str(site.bulk['SUM']) + ':' + bulk_a1_ratio_str + "\t" )
+        self.writer.write(site.CHROM + "\t" + str(site.real_POS()) + "\t" + str(site.REF) + '\t' + str(site.ALTS['A1']) + "\t" + str(site.BULK_INFO['SUM']) + ':' + bulk_a1_ratio_str + "\t" )
         for sample_name in self.sample_names:
             self.writer.write(site.samples[sample_name].info + ":" + str(sum(site.samples[sample_name].AD.values())) + "\t")
         self.writer.write("\n")
@@ -132,12 +132,12 @@ class HTML(object):
     def write_site(self, site):
         self.source_code.append('<tr>\n')
 
-        self.source_code.append('<td class="info cell">chr' + site.chrom + ':' + str(site.true_pos) + '</td>\n') 
-        bulk_a1_ratio = float(site.bulk[site.alts['A1']])/site.bulk['SUM']
+        self.source_code.append('<td class="info cell">chr' + site.CHROM + ':' + str(site.real_POS()) + '</td>\n') 
+        bulk_a1_ratio = float(site.BULK_INFO[site.ALTS['A1']])/site.BULK_INFO['SUM']
         if bulk_a1_ratio > 0:
-            self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.chrom + "_" + str(site.true_pos) + "'" + ')" > DP: ' + str(site.bulk['SUM']) + ' (' + '{0:.2f}'.format(bulk_a1_ratio) + ')</p></td>')  
+            self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" > DP: ' + str(site.BULK_INFO['SUM']) + ' (' + '{0:.2f}'.format(bulk_a1_ratio) + ')</p></td>')  
         else:
-            self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.chrom + "_" + str(site.true_pos) + "'" + ')" > DP: ' + str(site.bulk['SUM']) + '</p></td>')  
+            self.source_code.append('<td class="bulk cell"> <p class="clicker" onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" > DP: ' + str(site.BULK_INFO['SUM']) + '</p></td>')  
 
         for sample_name in self.sample_names:
             cell_name_type = "name"
@@ -156,30 +156,30 @@ class HTML(object):
             elif site.samples[sample_name].info == "ZERO-READS":
                 cell_name_type = "-"
 
-            self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker " onclick="show(' + "'hidden_" +  site.chrom + "_" + str(site.true_pos) + "'" + ')" >' + cell_name_type + '</p>\n')
+            self.source_code.append('<td class="'+ site.samples[sample_name].info  + ' cell" ><p class="clicker " onclick="show(' + "'hidden_" +  site.CHROM + "_" + str(site.real_POS()) + "'" + ')" >' + cell_name_type + '</p>\n')
            
-            self.source_code.append('<table class="hidden ' + 'hidden_' +  site.chrom + '_' + str(site.true_pos) + '">\n')
+            self.source_code.append('<table class="hidden ' + 'hidden_' +  site.CHROM + '_' + str(site.real_POS()) + '">\n')
             self.source_code.append('<tr><td colspan=5><strong>' + sample_name + '</strong>: ' + site.samples[sample_name].get_AD(site) + '</td></tr>')
 
             self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
-            tuples_list = sorted(list(site.samples[sample_name].tuples.items()), key=lambda x: x[0])
-            for snp_pos, tuple in tuples_list:
-                if count_total_tuples(tuple) > 0:
-                    if tuple['voted'] != '':
+            msp_list = sorted(list(site.samples[sample_name].MSP.items()), key=lambda x: x[0])
+            for snp_pos, msp in msp_list:
+                if msp.get_ms_total() > 0:
+                    if msp.voted != '':
                         self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) +  '</td>\n')
-                        self.source_code.append('<td colspan=2>tuple: ' + str(site.snp_tuple_star[snp_pos]) + '</td></tr>\n')
-                        if tuple['voted'] == 'UNKNOWN':
-                            self.source_code.append('<tr><td class="voted_unknown" colspan=5> voted: ' + tuple['voted'] + '</td></tr>\n')
+                        self.source_code.append('<td colspan=2>tuple: ' + str(site.snp_ms_win[snp_pos]) + '</td></tr>\n')
+                        if msp.voted == 'UNKNOWN':
+                            self.source_code.append('<tr><td class="voted_unknown" colspan=5> voted: ' + msp.voted + '</td></tr>\n')
                         else:
-                            self.source_code.append('<tr><td class="voted" colspan=5> voted: ' + tuple['voted'] + '</td></tr>\n')
+                            self.source_code.append('<tr><td class="voted" colspan=5> voted: ' + msp.voted + '</td></tr>\n')
                     else:
                         self.source_code.append('<tr><td colspan=2>SNP: ' + str(snp_pos+1) + '</td></tr>\n')
 
                     self.source_code.append('<tr>\n')
-                    self.source_code.append('<td> RR: ' + str(tuple['RR']) + '</td>\n')
-                    self.source_code.append('<td> RA: ' + str(tuple['RA']) + '</td>\n')
-                    self.source_code.append('<td> AR: ' + str(tuple['AR']) + '</td>\n')
-                    self.source_code.append('<td> AA: ' + str(tuple['AA']) + '</td></tr>\n')
+                    self.source_code.append('<td> RR: ' + str(msp.RR) + '</td>\n')
+                    self.source_code.append('<td> RA: ' + str(msp.RA) + '</td>\n')
+                    self.source_code.append('<td> AR: ' + str(msp.AR) + '</td>\n')
+                    self.source_code.append('<td> AA: ' + str(msp.AA) + '</td></tr>\n')
                     self.source_code.append('<tr><td colspan=5>-----------</td></tr>\n')
             self.source_code.append('</table>\n')
             self.source_code.append('</td>')
@@ -222,11 +222,11 @@ class HTML(object):
         f.write("".join(self.source_code))
         f.close()
         
-class SiteToJSON(object):
+class Site2JSON(object):
     def __init__(self, path):
         self.f = open(path,'w')    
     def write(self,site):
-        if site.kind == '':
+        if site.TYPE == '':
             self.f.write(repr(site) + '\n')
 
     def close(self):

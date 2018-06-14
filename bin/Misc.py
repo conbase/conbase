@@ -40,9 +40,7 @@ def trees_stats(sites,output):
             filtered_sites.append(site)
     filtered_sites_2 = filter_by_trees(filtered_sites) 
     f = open(output+'_trees_stats.txt','w')
-    # f.write("Percentage of positions with at least one green: " + str(float(len(filtered_sites))/len(sites))+"\n")
-    # f.write("Percentage of positions with impossible genotype distributions: " + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n")
-    f.write(str(analyze_params['dp_tuple_limit']) + '\t' + str(analyze_params['tuples_internal_ratio']) + '\t' + str(analyze_params['tuples_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
+    f.write(str(analyze_params['dp_ms_limit']) + '\t' + str(analyze_params['msp_internal_ratio']) + '\t' + str(analyze_params['msp_ratio']) + '\t' + str(float(len(filtered_sites))/len(sites)) + '\t' + str(float(len(filtered_sites_2))/len(filtered_sites)) + "\n" )
     return filtered_sites
 
 
@@ -75,7 +73,7 @@ def check_duplicate_region(sites):
                     if not in_duplicate_region:
                         filtered_sites.append(site)
                     else:
-                        print('removed site! position:', site.CHROM, site.true_pos)
+                        print('removed site! position:', site.CHROM, site.real_POS())
             else:
                 filtered_sites += chrom_sites
     else:
@@ -141,9 +139,6 @@ def duplicate_regions(snps_path, bam_path, reference_path, nodes=1, output_name=
         os.makedirs("./.conbase")
     if not os.path.exists("../results"):
         os.makedirs("../results")
-
-    # os.system("rm ./.conbase/duplicate_region_*")
-    # os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
 
     snps_chunks_path, _ = Stats.snps_to_chunks(snps_path, int(nodes), output_name)
 
