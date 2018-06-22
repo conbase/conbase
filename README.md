@@ -10,7 +10,7 @@ Algorithm developed by [Ezeddin Al Hakim](https://github.com/ezeddin), [Marie Ki
 
 Stats.py:   
 
-    python3 bin/Main.py stats <snp path> <bam path> <reference path> <number of threads> <output name>
+    python3 bin/Main.py stats <snp path> <bam path> <reference path> <number of threads <output name>
 
 
 Analyze.py: 
