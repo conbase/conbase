@@ -1,10 +1,8 @@
-# conbase
+![conbase](https://raw.githubusercontent.com/conbase/conbase/master/conbase_logo.png)
 
-## conbase algorithm description
+## Conbase: a software for unsupervised discovery of clonal somatic mutations in single cells through read phasing
  
-conbase is a method for calling clonal somatic mutations in single cell data exhibiting high error and allelic dropout rates. Increased confidence in variants is achieved by requiring that the mutation is present on either the maternal or paternal allele. By taking advantage of read phasing, absence of a mutation can be determined despite high rates of allelic dropout. The somatic mutation site prediction is based on a set of parameters associated with observations in reads and read pairs covering heterozygous SNVs and sites containing an alternative allele present in a subset of samples. 
-
-conbase consists of two separate subprograms, conbase_stats and conbase_analyze. conbase_stats iterates over positions upstream and downstream heterozygous SNVs in a genomic window, and prints statistics about sites where an alternative base is present. The genomic window size is determined by the maximal distance from a SNV covered by read pairs in any direction in any of the samples (maximum library fragment size). 
+Conbase is a software for identification of somatic mutations in single cell DNA sequencing data exhibiting high rates of allelic dropout and at low read depth. Conbase leverages data from multiple samples in a dataset, and utilizes read phasing to call somatic single nucleotide variants and to accurately predict genotypes in whole genome amplified single cells.
 
 Algorithm developed by [Ezeddin Al Hakim](https://github.com/ezeddin), [Marie Kindblom](https://github.com/mkindblom) & [Joanna Hård](https://github.com/joannahard).
 
@@ -36,7 +34,7 @@ input format snp file
     .
     .
 
-## Authors
+## Implementation by
 
 * **Marie Kindblom** - (https://github.com/mkindblom)
 * **Ezeddin Al Hakim** - (https://github.com/ezeddin)
