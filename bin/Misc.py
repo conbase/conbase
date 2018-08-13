@@ -52,9 +52,9 @@ def check_duplicate_region(sites):
     if len(sites) > misc_params["mut_nr_limit"]:
         sites_per_chrome = dict()
         for s in sites:
-            if int(s.CHROM) not in sites_per_chrome.keys():
-                sites_per_chrome[int(s.CHROM)] = list()
-            sites_per_chrome[int(s.CHROM)].append(s)
+            if int(s.chrom) not in sites_per_chrome.keys():
+                sites_per_chrome[int(s.chrom)] = list()
+            sites_per_chrome[int(s.chrom)].append(s)
 
         chrome_sites_list = sorted(sites_per_chrome.items())
 
@@ -70,12 +70,12 @@ def check_duplicate_region(sites):
 
                     for i in range(len(window_of_sites)-misc_params["mut_nr_limit"]):
                         interval = window_of_sites[i:i+misc_params["mut_nr_limit"] + 1]
-                        if max(interval, key=lambda s: s.POS).POS - min(interval, key=lambda s: s.POS).POS <= misc_params["mut_dist_limit"]:
+                        if max(interval, key=lambda s: s.pos).pos - min(interval, key=lambda s: s.pos).pos <= misc_params["mut_dist_limit"]:
                             in_duplicate_region = True
                     if not in_duplicate_region:
                         filtered_sites.append(site)
                     else:
-                        print('removed site! position:', site.CHROM, site.true_pos)
+                        print('removed site! position:', site.chrom, site.true_pos)
             else:
                 filtered_sites += chrom_sites
     else:
