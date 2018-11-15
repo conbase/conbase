@@ -526,13 +526,14 @@ def snps_to_chunks(snps_path, nodes, output_name):
             output_name (str): name of output file 
     """
     print('Loading SNPS ...')
-    if nodes == 1:
-        return [snps_path]
 
     f = open(snps_path, 'r')
     snp_count = sum([ bl.count("\n") for bl in blocks(f)]) - 1
     chunk_size = int(snp_count/nodes)
 
+    if nodes == 1:
+        return [snps_path], snp_count
+    
     current_chunk_number = 0
     current_chunk_file, current_chunk_path = new_chunk_file(current_chunk_number, output_name)
     chunks_path = [current_chunk_path]
@@ -603,13 +604,16 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
     """
     if not os.path.exists("./.conbase"):
         os.makedirs("./.conbase")
+    else:
+        # TODO: print that remove files
+        # OBS! need to check if files exist first.
+        for filename in os.listdir("./.conbase"):
+            if filename.startswith(output_name):
+                print("removing file: " + output_name)
+                os.remove("./.conbase/" + filename)
 
     if not os.path.exists('../results/'):
         os.makedirs('../results/')
-
-    # TODO: print that remove files
-    os.system("rm ./.conbase/" + output_name + "_chunk_*")	
-    os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")
 
     sample_names = get_sample_names(bam_paths)
     snps_chunks_path, nr_snps = snps_to_chunks(snps_path, nodes, output_name)
