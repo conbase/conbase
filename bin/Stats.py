@@ -592,7 +592,7 @@ def progress_bar(nr_snps, queue, bar_width=100):
                 sys.stdout.flush()
                 prev_progress = current_progress
 
-def stats(snps_path, bam_paths, reference_path, nodes, output_name): 
+def stats(snps_path, bam_paths, reference_path, nodes, outprefix): 
     """ 
         stats: main function for Stats.py
         Args:
@@ -602,18 +602,23 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
             nodes (int): number of nodes/chunks
             output_name (str): name of output file 
     """
+    # string output_name for temp_files in .conbase folder.
+    output_name = outprefix.replace("/","_")
+
+    # create temp folder and check for old content.
     if not os.path.exists("./.conbase"):
         os.makedirs("./.conbase")
     else:
-        # TODO: print that remove files
-        # OBS! need to check if files exist first.
+        # Need to check if files exist first and remove them
         for filename in os.listdir("./.conbase"):
             if filename.startswith(output_name):
                 print("removing file: " + output_name)
                 os.remove("./.conbase/" + filename)
 
-    if not os.path.exists('../results/'):
-        os.makedirs('../results/')
+    # make output folder
+    out_path = os.path.split(outprefix)[0]            
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
 
     sample_names = get_sample_names(bam_paths)
     snps_chunks_path, nr_snps = snps_to_chunks(snps_path, nodes, output_name)
@@ -637,14 +642,14 @@ def stats(snps_path, bam_paths, reference_path, nodes, output_name):
         
     print('All done')
 
-    f = open( '../results/' + output_name + '.json', 'w')
+    f = open( outprefix + '.json', 'w')
     f.write('{' + '"samples":' + json.dumps(sample_names) + '}\n')
     f.write('{' + '"stats_params":' + json.dumps(stats_params) + '}\n')
     f.close()
 
     for i in range(nr_chunks):
         f = './.conbase/' + output_name + '_chunk_' + str(i) + '.json'
-        os.system('cat '+f+' >> ../results/' + output_name + '.json')
+        os.system('cat '+f+' >> ' + outprefix + '.json')
 
     os.system("rm ./.conbase/" + output_name + "_chunk_*")	
     os.system("rm ./.conbase/" + output_name + "_snp_chunk_*")

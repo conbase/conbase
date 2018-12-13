@@ -10,6 +10,11 @@ acceptable_bases = {'A','C','G','T'}
 
 def filter_by_trees(sites):
     filtered_sites = list()
+
+    # modify sample names in the trees
+    for tree_name in trees:
+        trees[tree_name]['samples'] = list(sites[0].samples.keys())
+    
     for site in sites:
         genotype_dict = {tree:{'HET':0, 'HOM':0} for tree in trees.keys()}
         for tree_name, tree in trees.items():

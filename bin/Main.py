@@ -1,12 +1,12 @@
 import Stats, Analyze, File_Output
 from Params import analyze_params, misc_params, stats_params
-import argparse, json
+import argparse, json, sys
 import Misc
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run conbase')
-    parser.add_argument('--stats', nargs=5, metavar=("<snp path>", "<bam path>", "<reference path>", "<number of nodes>", "<output name>"))
-    parser.add_argument('--analyze', nargs=2, metavar=("<json path>", "<output name>"))
+    parser.add_argument('--stats', nargs=5, metavar=("<snp path>", "<bam path>", "<reference path>", "<number of nodes>", "<outprefix>"))
+    parser.add_argument('--analyze', nargs=2, metavar=("<json path>", "<outprefix>"))
     parser.add_argument('--params_stats', nargs=1, metavar=("<params dict>"))
     parser.add_argument('--params_analyze', nargs=1, metavar=("<params dict>"))
 
@@ -24,21 +24,20 @@ if __name__ == '__main__':
         bam_paths = args.stats[1]
         reference_path = args.stats[2]
         nodes = int(args.stats[3])
-        output_file_name = args.stats[4]
-        Stats.stats(snps_path, bam_paths, reference_path, nodes, output_file_name)
-        print("Done!" + '../results/' + output_file_name + ".json" )
+        outprefix = args.stats[4]
+        Stats.stats(snps_path, bam_paths, reference_path, nodes, outprefix)
+        print("Done! results in " + outprefix + ".json" )
 
     if args.analyze is not None:
         print('run...')
         json_path = args.analyze[0]
-        # main_directory = os.path.dirname(os.path.realpath(__file__)) 
-        output_name =  '../results/' + args.analyze[1]
+        outprefix =  args.analyze[1]
         f = open(json_path)
         samples_names = json.loads(f.readline().strip('\n'))['samples']
         stats_params_in_json = json.loads(f.readline().strip('\n'))['stats_params']
 
-        html = File_Output.HTML(output_name + ".html", samples_names, stats_params_in_json, analyze_params, misc_params)
-        tsv = File_Output.TSV(output_name + ".tsv", samples_names)
+        html = File_Output.HTML(outprefix + ".html", samples_names, stats_params_in_json, analyze_params, misc_params)
+        tsv = File_Output.TSV(outprefix + ".tsv", samples_names)
 
         sites = Analyze.json_to_site(f)
         my_sites = []
@@ -59,22 +58,42 @@ if __name__ == '__main__':
                             nr_a1 += 1
 
                     if nr_a1 >= analyze_params["a1_lower_limit"] and nr_conflicting <= analyze_params["conflicting_upper_limit"] and nr_c3_conflicting <= analyze_params["c3_conflicting_upper_limit"]:
-                        print(site.chrom + ':' + str(site.true_pos))
+                        #print(site.chrom + ':' + str(site.true_pos))
                         my_sites.append(site)
         
         my_sites.sort(key= lambda o: (int(o.chrom), int(o.pos)))
-        
+        # filtering gives error if no sites are found, create empty files instead.
+        if len(my_sites) == 0:
+            print("OBS! No sites found! Creating empty output files:")
+            print(outprefix)
+            open(outprefix + ".pdf", 'w').close()
+            open(outprefix + ".html", 'w').close()                                            
+            sys.exit(0)
+            
+        print("Read sites: %d"%len(my_sites))
         my_sites = Misc.check_duplicate_region(my_sites)
+        print("After removed duplicates: %d"%len(my_sites))
         my_sites = Misc.filter_by_trees(my_sites)
+        print("After filter by trees: %d"%len(my_sites))
 
+	# does not produce pdf if no sites found, need to create empty files.
+        if len(my_sites) == 0:
+            print("OBS! No sites found after filtering! Creating empty output files:")
+            print(outprefix)
+            open(outprefix + ".pdf", 'w').close()
+            open(outprefix + ".html", 'w').close()            
+            sys.exit(0)
+        
         for site in my_sites:
             html.write_site(site)
             tsv.write_site(site)
         html.close()
         tsv.close()
 
-        table_plot = File_Output.TABLE_PLOT(output_name + ".pdf", samples_names, my_sites, a1_param=True, border_color='none') # border_color='none'
+        table_plot = File_Output.TABLE_PLOT(outprefix + ".pdf", samples_names, my_sites, a1_param=True, border_color='none') # border_color='none'
         
-        
-        print('Done! ' + output_name + '.html')
+        print('Done! results in:')
+        print( outprefix + '.html')
+        print( outprefix + '.pdf')
+        print( outprefix + '.tsv')                
 
