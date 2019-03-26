@@ -82,7 +82,7 @@ In Params.py, optionally adjust:
 
 	"vote_ratio_limit" : 0.9, #Minimum fraction of samples required to support the same base
 
-	"snp_read_limit" : 1, #TODO
+	"snp_read_limit" : 1, #Minimun number of reads covering an SNP for a given sample to regard its reads (and voting) for the SNP
 
 	"indel_ratio" : 0.05, #The fraction of reads in the entire dataset allowed to contain an indel  
 
@@ -97,7 +97,9 @@ In Params.py, optionally adjust:
     ############### Analyze #################  
 	analyze_params = {
 
-	# Genotyping is based on phased read concordance. saved as tuples containing base observations in somatic variant sites and germline SNV sites present in the same read or read pair  
+	# Genotyping is based on phased read concordance. saved as tuples containing base observations in somatic variant sites and germline SNV sites present in the same read or read pair
+   
+    # Please note the following annotations: a heterozygous site can be of type = {RR, AA} or {RA, AR} and a homozygous site is always {RR, RA} where R is the reference base and A the alternative. Any of these three combinations is a combination of two tuples, and will be referred to as a "tuple pair" below.
 
 	"dp_tuple_limit" : 5, #Minimum number of phased reads  
 
