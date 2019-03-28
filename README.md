@@ -97,7 +97,7 @@ In Params.py, optionally adjust:
     ############### Analyze #################  
 	analyze_params = {
 
-	# Genotyping is based on phased read concordance. saved as tuples containing base observations in somatic variant sites and germline SNV sites present in the same read or read pair
+	# Genotyping is based on phased read concordance determined by analyzing tuples containing base observations in somatic variant sites and germline SNV sites present in the same read or read pair
    
     # Please note the following annotations: a heterozygous site can be of type = {RR, AA} or {RA, AR} and a homozygous site is always {RR, RA} where R is the reference base and A the alternative. Any of these three combinations is a combination of two tuples, and will be referred to as a "tuple pair" below.
 
