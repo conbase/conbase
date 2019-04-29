@@ -1,0 +1,17 @@
+NAME	PATH
+BULK	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/BULK.bam
+1	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/1.bam
+2	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/2.bam
+3	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/3.bam
+4	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/4.bam
+5	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/5.bam
+6	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/6.bam
+7	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/7.bam
+8	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/8.bam
+9	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/9.bam
+10	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/10.bam
+11	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/11.bam
+12	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/12.bam
+13	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/13.bam
+14	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/14.bam
+15	/media/box4/Experiments/Joanna/conbase_install_test/conbase/data/15.bam
