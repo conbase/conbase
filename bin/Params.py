@@ -1,24 +1,24 @@
 ############### Stats #################
 stats_params = {
 # Read
-"fragment_length" : 200,
+"fragment_length" : 650,
 "mapping_quality" : 20,
 "base_quality" : 20,
 # ALT
-"dp_limit" : 10,
+"dp_limit" : 5,
 "alt_ratio_limit" : 0.2,
 "sample_vote_limit" : 2,  
-"vote_ratio_limit" : 1,
+"vote_ratio_limit" : 0.9,
 "snp_read_limit" : 1,
 # Indel
-"indel_ratio" : 0.01,
+"indel_ratio" : 0.05,
 # Bulk
 "bulk_ref_limit" : 1,  #this requires the remaining percent to be only a1 
 "acceptable_bases" : ['A', 'C', 'G', 'T'],
 }
 ############### Analyze #################
 analyze_params = {
-"dp_tuple_limit" : 10,
+"dp_tuple_limit" : 5,
 "snp_total_vote" : 0.9,
 "snp_vote_ratio" : 0.9,
 
@@ -37,15 +37,15 @@ analyze_params = {
 "sample_tuple_vote_limit" : 2,
 "vote_tuple_ratio_limit" : 0.9,
 
-"conflicting_upper_limit" : 100,
-"c3_conflicting_upper_limit" : 100,
+"conflicting_upper_limit" : 0,
+"c3_conflicting_upper_limit" : 0,
 "a1_lower_limit" : 2,
-"bulk_dp_interval" : (15,55), # Must have the following format (min, max)
+"bulk_dp_interval" : (15,65), # Must have the following format (min, max)
 }
 
 ################ Misc ##################
 misc_params = {
-"mut_nr_limit" : 100,
+"mut_nr_limit" : 1,
 "mut_dist_limit" : 1000,
 
 "snp_nr_limit" : 10,
@@ -56,11 +56,11 @@ misc_params = {
 trees = {
     'tree1':{
         'samples':['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
-        'params': { 'MIN_HET': 2, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
+        'params': { 'MIN_HET': 2, 'MIN_HOM': 1, 'MAX_HET': 14, 'MAX_HOM': 13}
     },
     'all':{
         'samples':['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
-        'params': { 'MIN_HET': 2, 'MIN_HOM': 1, 'MAX_HET': 100, 'MAX_HOM': 100}
+        'params': { 'MIN_HET': 2, 'MIN_HOM': 1, 'MAX_HET': 14, 'MAX_HOM': 13}
     }
 }
 
